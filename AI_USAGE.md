@@ -78,3 +78,13 @@ artifacts that directed the AI live in [specs/](specs/).
   order, the Status enum, and the event params in the guide were cross-checked against
   `src/EscrowVault.sol`.
 - **Files touched:** `docs/INTEGRATION.md`, `README.md`, `deployments/arc-testnet.md`.
+
+### 2026-06-13 — Doc corrections (yield source, fee revert)
+- **Directed by:** Don
+- **What:** Clarified that escrow yield comes from the contract's on-chain
+  `IYieldSource` (MockYieldSource on testnet, ERC-4626 in production), with Privy
+  providing embedded wallets only — across `README.md` and `CLAUDE.md`
+  (`specs/escrow-vault.md` already stated this). Reworded the `FeeExceedsPrincipal`
+  note in `docs/INTEGRATION.md` to make clear `fund()` reverts, not `createEscrow`.
+  Verified the README architecture image link matches the actual file (no change).
+- **Files touched:** `README.md`, `CLAUDE.md`, `docs/INTEGRATION.md`.

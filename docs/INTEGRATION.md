@@ -84,8 +84,10 @@ auto-generated getter returns all of them):
 | Fund | `fund(uint256 id, uint256 amount)` | tenant (after `approve`) |
 | Withdraw | `withdraw()` | each party, claims own `withdrawable` balance |
 
-> `createEscrow` reverts with `FeeExceedsPrincipal()` at `fund` time if
-> `contractorFee > amount`. Status starts `Open`, `funded`/`settled` start `false`.
+> `createEscrow` only records the escrow (status `Open`, `funded`/`settled` =
+> `false`) and stores `contractorFee` without validating it. The fee-vs-principal
+> check happens later in **`fund`**: if `contractorFee > amount`, `fund` reverts with
+> `FeeExceedsPrincipal()`. So a too-high fee surfaces at funding time, not at creation.
 
 ### Writes (admin / backend only — NOT the UI)
 

@@ -26,12 +26,14 @@ start; commit history must show incremental, human-directed progress.
 - Oracle: Chainlink CRE reads the HPD API off-chain, runs consensus, writes
   status on-chain. Make the contract's oracle a settable, access-controlled
   role so a relayer can stand in if a CRE->Arc write path isn't ready in time.
-- Wallets + yield: Privy + Privy Earn (partner-owned).
+- Wallets: Privy embedded wallets only (partner-owned). Escrow yield is NOT from
+  Privy Earn — it comes from the contract's on-chain IYieldSource (MockYieldSource on
+  testnet, an ERC-4626 USDC vault in production).
 
 ## Team scope
 - Don: Arc contracts (escrow vault, yield position, release logic), Chainlink
   CRE integration, NYC Open Data connection.
-- Nilesh: frontend, Privy wallets + Earn.
+- Nilesh: frontend, Privy embedded wallets.
 
 ## Open decisions
 - Funds custody: locked funds in the escrow contract (contract integrates an

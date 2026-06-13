@@ -33,7 +33,8 @@ pull the funds unilaterally:
 | Currency | **USDC** (6 decimals) |
 | Oracle | **Chainlink CRE** reads HPD status off-chain, posts it on-chain |
 | Data source | **NYC Open Data** — HPD Housing Maintenance Code Violations (`wvxf-dwi5`) |
-| Wallets + yield | **Privy** (embedded wallets + Earn) |
+| Embedded wallets | **Privy** (wallets only) |
+| Escrow yield | The contract's **`IYieldSource`** — `MockYieldSource` on testnet, an ERC-4626 USDC vault in production |
 | Contracts | Solidity 0.8.24, **Foundry** |
 
 ## Deployed contracts — Arc testnet (chain `5042002`)
@@ -90,7 +91,7 @@ against the contract), viem + cast examples, and Privy notes.
 | Area | Owner |
 |---|---|
 | Arc contracts, Chainlink CRE, NYC Open Data | **Don** |
-| Frontend, Privy wallets + Earn | **Nilesh** |
+| Frontend, Privy embedded wallets | **Nilesh** |
 
 ## AI usage
 
