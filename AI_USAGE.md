@@ -59,3 +59,13 @@ artifacts that directed the AI live in [specs/](specs/).
   equally). Added `Parties`/`_parties`/`_credited`/`_fund` test helpers; refactored
   to keep within the EVM stack limit (no `via_ir`). `forge test` 9/9 green.
 - **Files touched:** `test/EscrowVault.t.sol`.
+
+### 2026-06-13 — Arc testnet deployment
+- **Directed by:** Don (ran the keystore-signed broadcast himself — the keystore
+  password prompt needs an interactive TTY, which the AI's shell lacks; AI never
+  handled the key or password).
+- **What:** AI prepared/validated the deploy, then verified the live wiring on-chain
+  (`mock.vault() == EscrowVault`, reciprocal `yieldSource`/`oracle`/`usdc`) and
+  recorded addresses in `deployments/arc-testnet.md`. Broadcast/cache artifacts left
+  gitignored (not committed).
+- **Files touched:** `deployments/arc-testnet.md`.
