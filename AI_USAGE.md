@@ -28,3 +28,13 @@ artifacts that directed the AI live in [specs/](specs/).
   skeleton (TODO bodies, no release logic yet). `forge build` passes.
 - **Files touched:** `foundry.toml`, `src/EscrowVault.sol`, `src/IYieldSource.sol`,
   `specs/escrow-vault.md`, `lib/` (forge-std, openzeppelin-contracts), `.gitmodules`.
+
+### 2026-06-13 — Escrow logic + tests + deploy
+- **Directed by:** Don (pasted exact MockYieldSource + a step-by-step impl spec).
+- **What:** Implemented `MockYieldSource`, wired `createEscrow`/`fund`, and filled in
+  the release logic (`updateStatus`/`_settle`/pull-payment `withdraw`) with a
+  `contractorFee` split. Added a Forge test suite and a deploy script. Landed as
+  three logical commits (mock + wiring → release logic → tests + deploy).
+  `forge build` clean; `forge test` 6/6 green.
+- **Files touched:** `src/MockYieldSource.sol`, `src/EscrowVault.sol`,
+  `test/EscrowVault.t.sol`, `script/Deploy.s.sol`, `specs/escrow-vault.md`.
