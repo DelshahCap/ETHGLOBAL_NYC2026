@@ -69,3 +69,12 @@ artifacts that directed the AI live in [specs/](specs/).
   recorded addresses in `deployments/arc-testnet.md`. Broadcast/cache artifacts left
   gitignored (not committed).
 - **Files touched:** `deployments/arc-testnet.md`.
+
+### 2026-06-13 — Integration guide + README + verified marker
+- **Directed by:** Don
+- **What:** Wrote `docs/INTEGRATION.md` (frontend/Privy guide for Nilesh), rewrote
+  `README.md` to a concise overview, and marked EscrowVault verified in
+  `deployments/arc-testnet.md`. All function signatures, the `Escrow` struct field
+  order, the Status enum, and the event params in the guide were cross-checked against
+  `src/EscrowVault.sol`.
+- **Files touched:** `docs/INTEGRATION.md`, `README.md`, `deployments/arc-testnet.md`.

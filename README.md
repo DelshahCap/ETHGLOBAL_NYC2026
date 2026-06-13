@@ -1,75 +1,99 @@
 # NYC HPD Violation Tenant Protection <!-- temporary name — rename once finalized -->
 
-> On-chain rent escrow that holds rent in USDC while a NYC HPD housing violation is open — and pays the withheld rent's yield to the tenant once it's resolved.
+> On-chain rent escrow that holds rent in USDC while a NYC HPD housing violation is
+> open, releases it only on the **verified official HPD status**, and pays the yield
+> earned while locked to the **tenant**.
 
-Built for **ETHGlobal New York 2026**.
+Built for **ETHGlobal New York 2026** by the team at [Delshah Capital](https://www.delshah.com/).
 
 ![Architecture](./hpd_rent_escrow_privy_yield_architecture.png)
 
-<!--
-Rename your chosen diagram to docs/architecture.png (image 2 / the dark version).
-If you want the light/dark auto-swap later, replace the line above with a <picture> block.
--->
+## What it is
 
----
+In NYC, landlords must fix conditions flagged by **HPD** (Housing Preservation &
+Development). A tenant's usual options are to keep paying and hope, or withhold and
+risk eviction. This gives a third option: the tenant pays rent **into an on-chain
+escrow** while an HPD violation is open. The funds are real and committed but locked —
+the landlord gets them only once the violation is officially resolved, turning "please
+fix my apartment" into a funded incentive. While locked, the escrowed USDC earns yield,
+and that **yield goes to the tenant**.
 
-## What we're building
+Release keys off HPD's official status reported on-chain by an oracle — no party can
+pull the funds unilaterally:
 
-In New York, landlords are legally required to fix conditions flagged by **HPD** (Housing Preservation & Development). Today a tenant's only real leverage is to keep paying rent and hope it gets fixed, or to stop paying and risk eviction.
+- `Closed` (corrected) → principal to **contractor + landlord** (contractor takes a fee)
+- `Dismissed` → principal to **landlord**
+- **yield → tenant**, in every path
 
-This project gives the tenant a third option: pay rent **into an on-chain escrow** instead of directly to the landlord while an HPD violation is open. The money is real, it's committed, and it's locked — but the landlord doesn't get it until the violation is actually resolved. That turns "please fix my apartment" into a funded incentive.
-
-Everything settles in **USDC on Arc (Circle's L1)**. While the rent sits in escrow, the pooled USDC earns yield, and that yield goes to the tenant as compensation for the wait.
-
-## How it works
-
-1. **Rent goes into escrow.** Tenant, landlord, and contractor each have a wallet (via Privy). The tenant pays rent in USDC into the on-chain **escrow vault**. Funds are locked while the violation is open.
-2. **Idle funds earn yield.** Escrowed USDC is deposited into a **yield position** via Privy Earn. Pooled deposits earn yield while locked.
-3. **An oracle watches the violation.** **Chainlink CRE** reads the **NYC Open Data HPD violations API** off-chain and posts the violation status on-chain.
-4. **Release logic settles based on status:**
-   - `closed` (violation fixed) → principal released to **contractor + landlord**
-   - `dismissed` (violation invalidated) → principal released to **landlord**
-   - **yield → tenant**, in every case
-
-The escrow only resolves on a verified state change reported by the oracle — no party can unilaterally pull the funds.
-
-## Tech stack
+## Stack
 
 | Layer | Choice |
 |---|---|
-| Settlement chain | Arc (Circle L1), USDC-native |
-| Currency | USDC |
-| Oracle | Chainlink CRE (NYC Open Data → on-chain) |
-| Data source | NYC Open Data — HPD violations API |
-| Wallets + yield | Privy (wallets + Earn) |
-| Frontend | TBD (Nilesh) |
+| Settlement chain | **Arc** (Circle's USDC-native L1); USDC is the gas token |
+| Currency | **USDC** (6 decimals) |
+| Oracle | **Chainlink CRE** reads HPD status off-chain, posts it on-chain |
+| Data source | **NYC Open Data** — HPD Housing Maintenance Code Violations (`wvxf-dwi5`) |
+| Wallets + yield | **Privy** (embedded wallets + Earn) |
+| Contracts | Solidity 0.8.24, **Foundry** |
 
-## Team & ownership
+## Deployed contracts — Arc testnet (chain `5042002`)
+
+| Contract | Address |
+|---|---|
+| **EscrowVault** (verified ✅) | [`0x83B757a2DB265c185Ed837564fC3b3de3052CF3D`](https://testnet.arcscan.app/address/0x83B757a2DB265c185Ed837564fC3b3de3052CF3D?tab=contract) |
+| MockYieldSource | [`0xB61090E2e397Cd7bda07be495A0554a7b6780736`](https://testnet.arcscan.app/address/0xB61090E2e397Cd7bda07be495A0554a7b6780736) |
+| USDC (Arc predeploy) | `0x3600000000000000000000000000000000000000` |
+
+Full record: [`deployments/arc-testnet.md`](deployments/arc-testnet.md).
+
+## Repo layout
+
+```
+src/           # contracts: EscrowVault, IYieldSource, MockYieldSource (share-based)
+test/          # Foundry tests (forge test)
+script/        # forge scripts: Deploy.s.sol, Smoke.s.sol
+scripts/       # smoke.sh — cast-based live smoke test (runs on the Arc node)
+deployments/   # per-network deployment records
+docs/          # INTEGRATION.md (frontend/Privy guide)
+specs/         # prompts, specs, planning artifacts that directed the AI
+lib/           # forge-std, openzeppelin-contracts (git submodules)
+```
+
+## Build & test
+
+```bash
+forge build
+forge test            # unit tests (share accounting, multi-escrow isolation, etc.)
+forge test -vvv       # with traces
+```
+
+### Live smoke test (Arc testnet)
+
+Arc's blocklist precompile can't run in forge's local EVM, so the end-to-end smoke
+test uses `cast` to send transactions on the node:
+
+```bash
+./scripts/smoke.sh    # createEscrow → approve+fund → simulate yield → Dismissed → withdraw
+```
+
+It prompts for the `arcDeployer` keystore password and never reads a key from a file or
+env.
+
+## Frontend integration
+
+See **[docs/INTEGRATION.md](docs/INTEGRATION.md)** — network details, addresses, the
+full function/event reference (signatures and `Escrow` struct field order verified
+against the contract), viem + cast examples, and Privy notes.
+
+## Team
 
 | Area | Owner |
 |---|---|
-| Arc smart contracts (escrow vault, release logic, settlement) | **Don** ([@don-delshah](https://github.com/don-delshah)) |
-| Chainlink CRE integration | **Don** |
-| NYC Open Data / HPD violations connection | **Don** |
-| Frontend | **Nilesh** ([@nilesh-tabby](https://github.com/nilesh-tabby)) |
-| Privy wallet + Earn integration | **Nilesh** |
-| End-to-end integration | **Don + Nilesh** |
+| Arc contracts, Chainlink CRE, NYC Open Data | **Don** |
+| Frontend, Privy wallets + Earn | **Nilesh** |
 
-Built by the team at [Delshah Capital](https://www.delshah.com/).
+## AI usage
 
-## Repo structure <!-- adjust as the repo grows -->
-
-```
-/contracts      # Arc smart contracts: escrow vault, yield position, release logic
-/oracle         # Chainlink CRE job + NYC Open Data HPD adapter
-/frontend       # UI + Privy integration
-/docs           # architecture diagram and notes
-```
-
-## Status
-
-🚧 Early build — ETHGlobal NY 2026. Setting up the monorepo and wiring the first end-to-end path.
-
-## Development notes
-
-This project is being built during ETHGlobal NY 2026. Per event rules on AI tooling, AI-assisted work is attributed: spec files and prompts used are committed to the repo, and we keep an incremental commit history rather than large single-commit drops.
+Per ETHGlobal "From Scratch" rules, AI-assisted work is attributed: prompts and specs
+live in [`specs/`](specs/), a running log is in [`AI_USAGE.md`](AI_USAGE.md), and the
+commit history is incremental and human-authored.

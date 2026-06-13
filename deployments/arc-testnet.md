@@ -16,6 +16,11 @@
 | MockYieldSource | `0xB61090E2e397Cd7bda07be495A0554a7b6780736` |
 | EscrowVault     | `0x83B757a2DB265c185Ed837564fC3b3de3052CF3D` |
 
+## Verification
+
+- **EscrowVault — verified ✅** (source verified on the explorer, exact match, 2026-06-13):
+  https://testnet.arcscan.app/address/0x83B757a2DB265c185Ed837564fC3b3de3052CF3D?tab=contract
+
 ## Configuration
 
 | Param                 | Value | Notes |
