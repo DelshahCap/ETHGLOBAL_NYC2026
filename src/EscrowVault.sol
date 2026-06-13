@@ -44,6 +44,9 @@ contract EscrowVault {
     error NotOracle();
     error EscrowNotFound();
     error AlreadyFunded();
+    error NotFunded();
+    error AlreadySettled();
+    error NothingToWithdraw();
 
     modifier onlyOwner() { if (msg.sender != owner) revert NotOwner(); _; }
     modifier onlyOracle() { if (msg.sender != oracle) revert NotOracle(); _; }
@@ -101,17 +104,47 @@ contract EscrowVault {
 
     /// @notice Called by the CRE forwarder/relayer with the verified HPD status.
     function updateStatus(uint256 id, Status status) external onlyOracle {
-        revert("TODO: updateStatus"); // record status; if terminal, _settle
+        Escrow storage e = escrows[id];
+        if (!e.funded) revert NotFunded();
+        if (e.settled) revert AlreadySettled();
+        e.status = status;
+        if (status == Status.Closed || status == Status.Dismissed) {
+            _settle(id);
+        } else {
+            emit StatusUpdated(id, status);
+        }
     }
 
     function _settle(uint256 id) internal {
-        // TODO: pull principal+yield from yieldSource; credit withdrawable[]:
-        //       yield -> tenant always; Closed -> contractor + landlord; Dismissed -> landlord
+        Escrow storage e = escrows[id];
+        // Pull principal + yield back out of the yield source.
+        uint256 yield = yieldSource.accruedYield();
+        uint256 total = e.principal + yield;
+        yieldSource.withdraw(total);
+
+        // Yield always goes to the tenant.
+        withdrawable[e.tenant] += yield;
+
+        if (e.status == Status.Closed) {
+            // Corrected: contractor takes its fee, landlord takes the remainder.
+            withdrawable[e.contractor] += e.contractorFee;
+            withdrawable[e.landlord] += e.principal - e.contractorFee;
+        } else if (e.status == Status.Dismissed) {
+            // Dismissed: full principal to the landlord.
+            withdrawable[e.landlord] += e.principal;
+        }
+
+        e.settled = true;
+        emit Settled(id, e.status);
     }
 
     /// @notice Pull-payment: each party claims its own balance, so one blocklisted
     ///         recipient can't brick the others (Arc reverts on blocklisted transfers).
     function withdraw() external {
-        revert("TODO: withdraw"); // zero withdrawable[msg.sender], usdc.transfer, emit Withdrawn
+        uint256 amt = withdrawable[msg.sender];
+        if (amt == 0) revert NothingToWithdraw();
+        withdrawable[msg.sender] = 0; // checks-effects-interactions: zero before transfer
+        usdc.transfer(msg.sender, amt);
+        emit Withdrawn(msg.sender, amt);
     }
 }

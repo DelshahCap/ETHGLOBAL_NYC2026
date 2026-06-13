@@ -36,11 +36,20 @@ blocklisted recipient brick settlement for everyone. Pull-payment contains that 
 affected account.
 
 ## Lifecycle
-1. `createEscrow(tenant, landlord, contractor, violationId)` → record, status `Open`.
+1. `createEscrow(tenant, landlord, contractor, violationId, contractorFee)` → record,
+   status `Open`. `contractorFee` is the USDC paid to the contractor on a `Closed`
+   outcome; the landlord receives `principal - contractorFee`.
 2. `fund(id, amount)` → `transferFrom` USDC, deposit to yield source, mark funded.
 3. `updateStatus(id, status)` (oracle) → record status; if terminal, `_settle`.
 4. `_settle(id)` → withdraw principal + yield from yield source, credit `withdrawable[]`.
 5. `withdraw()` → each recipient pulls its balance.
+
+## Yield accounting — single active escrow (for now)
+The current `_settle` reads `yieldSource.accruedYield()` for the whole source and
+credits all of it to the settling escrow's tenant. That is correct only with **one
+active escrow at a time**, which is the demo assumption. Supporting many concurrent
+escrows needs pooled, per-escrow yield accounting (e.g. ERC-4626 shares) so each
+tenant earns yield proportional to their own locked principal — noted as future work.
 
 ## Status: skeleton only
 Current code is state + signatures; the release logic (`createEscrow`, `fund`,
