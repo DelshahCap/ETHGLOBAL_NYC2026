@@ -88,3 +88,13 @@ artifacts that directed the AI live in [specs/](specs/).
   note in `docs/INTEGRATION.md` to make clear `fund()` reverts, not `createEscrow`.
   Verified the README architecture image link matches the actual file (no change).
 - **Files touched:** `README.md`, `CLAUDE.md`, `docs/INTEGRATION.md`.
+
+### 2026-06-13 — CRE HPD oracle spec
+- **Directed by:** Don
+- **What:** Wrote `specs/cre-oracle.md` specifying the HPD → Chainlink CRE →
+  EscrowVault integration: cron TS workflow polling Socrata `wvxf-dwi5` and mapping to
+  the Status enum, an `EscrowVaultReceiver` (ReceiverTemplate) decoding
+  `abi.encode(uint256 id, uint8 status)` and calling `updateStatus`, the
+  KeystoneForwarder delivery flow, and sim (MockForwarder) vs prod (KeystoneForwarder).
+  Grounded in `src/EscrowVault.sol`, `src/IYieldSource.sol`, `deployments/arc-testnet.md`.
+- **Files touched:** `specs/cre-oracle.md`.
