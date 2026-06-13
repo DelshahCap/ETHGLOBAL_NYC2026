@@ -1,0 +1,40 @@
+# --- Foundry ---
+out/
+cache/
+cache_forge/
+broadcast/
+# Keep deployment artifacts but ignore the noisy per-run logs
+!broadcast/**/dry-run/
+# Compiler / coverage
+lcov.info
+*.gcov
+
+# --- Node ---
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+.pnpm-store/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Env & secrets ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# --- Editor / OS ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
