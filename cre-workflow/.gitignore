@@ -1,0 +1,9 @@
+# Secrets — never commit the real env (keep .env.example only)
+*.env
+.env
+!.env.example
+
+# Dependencies & build artifacts
+node_modules/
+dist/
+*.wasm

@@ -1,0 +1,9 @@
+{
+  "schedule": "0 */5 * * * *",
+  "chainSelector": "arc-testnet",
+  "consumerAddress": "0x0000000000000000000000000000000000000000",
+  "gasLimit": "500000",
+  "escrows": [
+    { "id": 0, "violationId": 12345678 }
+  ]
+}

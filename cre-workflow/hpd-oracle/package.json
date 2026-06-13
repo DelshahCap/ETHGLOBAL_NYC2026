@@ -1,0 +1,16 @@
+{
+  "name": "hpd-oracle",
+  "module": "main.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "postinstall": "bunx cre-setup"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "1.11.0",
+    "viem": "2.34.0"
+  }
+}

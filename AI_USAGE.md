@@ -112,3 +112,18 @@ artifacts that directed the AI live in [specs/](specs/).
   sources rather than reconstructing them from memory.
 - **Files touched:** `src/cre/*.sol`, `src/EscrowVaultReceiver.sol`,
   `test/EscrowVaultReceiver.t.sol`.
+
+### 2026-06-13 — CRE HPD→EscrowVault workflow
+- **Directed by:** Don
+- **What:** Installed the CRE CLI (v1.20.0) + bun; scaffolded a TS workflow under
+  `cre-workflow/` and implemented the HPD oracle per `specs/cre-oracle.md` (cron →
+  per-escrow Socrata `wvxf-dwi5` fetch in node mode → map to Status → `runtime.report`
+  → `EVMClient.writeReport` to the receiver). Added `config.json`, `project.yaml`,
+  `workflow.yaml`, and `secrets.yaml` (Socrata token kept in gitignored `.env`).
+- **AI note:** Rather than guess SDK syntax, AI read the installed
+  `@chainlink/cre-sdk@1.11.0` type defs in `node_modules` (cron/HTTP/EVMClient/getNetwork/
+  report/getSecret) and the getting-started TS snippets, and confirmed the Arc selector
+  (`arc-testnet` = 3034092155422581607) from the SDK's chain-selectors registry.
+  `main.ts` type-checks (`bunx tsc --noEmit`). `cre init`/simulate need a logged-in CRE
+  account, so the scaffold was assembled to match `cre init`'s `hello-world-ts` output.
+- **Files touched:** `cre-workflow/**` (excl. gitignored `node_modules`/`.env`).
