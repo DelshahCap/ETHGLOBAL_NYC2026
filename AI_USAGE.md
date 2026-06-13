@@ -139,3 +139,13 @@ artifacts that directed the AI live in [specs/](specs/).
 - **AI note:** Forwarder addresses read from the docs repo source (checksums verified
   with `cast`); confirmed Arc IS listed before writing (per instruction to stop if not).
 - **Files touched:** `deployments/arc-testnet.md`, `script/DeployReceiver.s.sol`.
+
+### 2026-06-13 — Deploy EscrowVaultReceiver + wire oracle
+- **Directed by:** Don (ran the keystore-signed broadcast himself — keystore password
+  needs an interactive TTY the AI's shell lacks; AI never handled the key).
+- **What:** AI finalized `script/DeployReceiver.s.sol` (deploy receiver with the Arc
+  MockKeystoneForwarder, `setOracle`, assert `oracle()==receiver`, no `setExpected*`),
+  dry-ran it against live Arc to validate, then after Don's broadcast verified the
+  wiring on-chain and recorded the receiver address, tx hashes, and oracle read in
+  `deployments/arc-testnet.md`. Receiver: `0x9244…Ae00f`.
+- **Files touched:** `script/DeployReceiver.s.sol`, `deployments/arc-testnet.md`.

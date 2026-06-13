@@ -39,9 +39,42 @@ CRE forwarders ([Forwarder Directory](https://docs.chain.link/cre/guides/workflo
 | KeystoneForwarder (production) | [`0x76c9cf548b4179F8901cda1f8623568b58215E62`](https://testnet.arcscan.app/address/0x76c9cf548b4179F8901cda1f8623568b58215E62) | deployed workflows |
 
 `EscrowVaultReceiver` takes one of these as its `forwarder` constructor arg
-([`script/DeployReceiver.s.sol`](../script/DeployReceiver.s.sol); `SIM=true` selects the
-mock). After deploy, the receiver is registered via `EscrowVault.setOracle`, and the CRE
-workflow's `config.json` `consumerAddress` is set to the receiver. Not deployed yet.
+([`script/DeployReceiver.s.sol`](../script/DeployReceiver.s.sol)). After deploy, the
+receiver is registered via `EscrowVault.setOracle`, and the CRE workflow's `config.json`
+`consumerAddress` is set to the receiver.
+
+### EscrowVaultReceiver — deployed (2026-06-13, block `46934843`)
+
+| Field | Value |
+|-------|-------|
+| EscrowVaultReceiver | `0x92447cDB9c8598CACCCD71709e0f9095490Ae00f` |
+| Forwarder | `0x6E9EE680ef59ef64Aa8C7371279c27E496b5eDc1` (Arc MockKeystoneForwarder, simulation) |
+| Vault | `0x83B757a2DB265c185Ed837564fC3b3de3052CF3D` |
+| Deployer | `0x49D056d8B39F32bc8bbfC58bd4f5cfd7f3a8627F` (keystore `arcDeployer`) |
+| Script | `script/DeployReceiver.s.sol:DeployReceiver` |
+
+Deployed with the simulation MockKeystoneForwarder; `setExpectedAuthor` /
+`setExpectedWorkflowId` left unset (zero) since the MockForwarder supplies no metadata.
+
+| Step | Tx hash |
+|------|---------|
+| Deploy EscrowVaultReceiver | `0x5528be8018b6b19d973c0543cca69610443d5f9770787b79f083a2a99652ed21` |
+| `EscrowVault.setOracle(receiver)` | `0x554322e482d9db44d76f2d9437d95816522a08fe15db760607df7ba50ba5c237` |
+
+Total paid: `0.0363404825` USDC (1,690,255 gas @ 21.5 gwei).
+
+Wiring verification (read on-chain after deploy):
+
+```
+vault.oracle()                == 0x92447cDB9c8598CACCCD71709e0f9095490Ae00f  (receiver)         ✅
+receiver.vault()              == 0x83B757a2DB265c185Ed837564fC3b3de3052CF3D  (EscrowVault)      ✅
+receiver.getForwarderAddress() == 0x6E9EE680ef59ef64Aa8C7371279c27E496b5eDc1  (Mock forwarder)  ✅
+receiver.getExpectedAuthor()  == 0x0  (unset)                                                    ✅
+receiver.getExpectedWorkflowId() == 0x0  (unset)                                                 ✅
+```
+
+> Next: set the CRE workflow's `cre-workflow/hpd-oracle/config.json` `consumerAddress`
+> to `0x92447cDB9c8598CACCCD71709e0f9095490Ae00f`.
 
 ## Configuration
 
