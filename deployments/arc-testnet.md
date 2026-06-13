@@ -21,6 +21,28 @@
 - **EscrowVault — verified ✅** (source verified on the explorer, exact match, 2026-06-13):
   https://testnet.arcscan.app/address/0x83B757a2DB265c185Ed837564fC3b3de3052CF3D?tab=contract
 
+## CRE oracle — Arc testnet
+
+Chain selector (from the `@chainlink/cre-sdk` chain-selectors registry):
+
+| Field | Value |
+|-------|-------|
+| Chain selector name | `arc-testnet` |
+| Chain selector (numeric) | `3034092155422581607` |
+| CRE CLI support | Arc testnet supported from CLI `v1.0.7+` |
+
+CRE forwarders ([Forwarder Directory](https://docs.chain.link/cre/guides/workflow/using-evm-client/forwarder-directory)):
+
+| Forwarder | Address | Use |
+|-----------|---------|-----|
+| MockKeystoneForwarder (simulation) | [`0x6E9EE680ef59ef64Aa8C7371279c27E496b5eDc1`](https://testnet.arcscan.app/address/0x6E9EE680ef59ef64Aa8C7371279c27E496b5eDc1) | `cre workflow simulate --broadcast` |
+| KeystoneForwarder (production) | [`0x76c9cf548b4179F8901cda1f8623568b58215E62`](https://testnet.arcscan.app/address/0x76c9cf548b4179F8901cda1f8623568b58215E62) | deployed workflows |
+
+`EscrowVaultReceiver` takes one of these as its `forwarder` constructor arg
+([`script/DeployReceiver.s.sol`](../script/DeployReceiver.s.sol); `SIM=true` selects the
+mock). After deploy, the receiver is registered via `EscrowVault.setOracle`, and the CRE
+workflow's `config.json` `consumerAddress` is set to the receiver. Not deployed yet.
+
 ## Configuration
 
 | Param                 | Value | Notes |

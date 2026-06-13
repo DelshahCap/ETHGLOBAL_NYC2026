@@ -127,3 +127,15 @@ artifacts that directed the AI live in [specs/](specs/).
   `main.ts` type-checks (`bunx tsc --noEmit`). `cre init`/simulate need a logged-in CRE
   account, so the scaffold was assembled to match `cre init`'s `hello-world-ts` output.
 - **Files touched:** `cre-workflow/**` (excl. gitignored `node_modules`/`.env`).
+
+### 2026-06-13 — Arc forwarder addresses + chain selector
+- **Directed by:** Don
+- **What:** Pulled the Arc testnet CRE forwarder addresses from the docs Forwarder
+  Directory source: MockKeystoneForwarder (sim) `0x6E9E…eDc1`, KeystoneForwarder (prod)
+  `0x76c9…5E62`; chain selector `arc-testnet` (3034092155422581607). Recorded them in
+  `deployments/arc-testnet.md` and a new `script/DeployReceiver.s.sol` (deploys
+  EscrowVaultReceiver with the chosen forwarder, then setOracle). `config.json`
+  `chainSelector` already correctly `"arc-testnet"` (no change). `forge build` clean.
+- **AI note:** Forwarder addresses read from the docs repo source (checksums verified
+  with `cast`); confirmed Arc IS listed before writing (per instruction to stop if not).
+- **Files touched:** `deployments/arc-testnet.md`, `script/DeployReceiver.s.sol`.
