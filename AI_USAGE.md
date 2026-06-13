@@ -98,3 +98,17 @@ artifacts that directed the AI live in [specs/](specs/).
   KeystoneForwarder delivery flow, and sim (MockForwarder) vs prod (KeystoneForwarder).
   Grounded in `src/EscrowVault.sol`, `src/IYieldSource.sol`, `deployments/arc-testnet.md`.
 - **Files touched:** `specs/cre-oracle.md`.
+
+### 2026-06-13 — EscrowVaultReceiver + CRE vendored sources
+- **Directed by:** Don
+- **What:** Vendored Chainlink's exact `ReceiverTemplate.sol`/`IReceiver.sol`/
+  `IERC165.sol` into `src/cre/` (fetched verbatim from the canonical docs samples,
+  `smartcontractkit/documentation` `public/samples/CRE/`, via `gh`). Wrote
+  `src/EscrowVaultReceiver.sol` (inherits `ReceiverTemplate`, decodes
+  `(uint256 id, uint8 status)` in `_processReport`, calls `vault.updateStatus`) and
+  `test/EscrowVaultReceiver.t.sol` (MockForwarder delivers reports; asserts Closed and
+  Dismissed settlements + forwarder-only auth). `forge test` 12/12 green.
+- **AI note:** AI used WebSearch/WebFetch + `gh api` to retrieve the *exact* upstream
+  sources rather than reconstructing them from memory.
+- **Files touched:** `src/cre/*.sol`, `src/EscrowVaultReceiver.sol`,
+  `test/EscrowVaultReceiver.t.sol`.
