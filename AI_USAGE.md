@@ -49,3 +49,13 @@ artifacts that directed the AI live in [specs/](specs/).
   `forge build` clean; `forge test` 7/7 green.
 - **Files touched:** `src/IYieldSource.sol`, `src/MockYieldSource.sol`,
   `src/EscrowVault.sol`, `test/EscrowVault.t.sol`, `specs/escrow-vault.md`.
+
+### 2026-06-13 — Multi-escrow isolation tests
+- **Directed by:** Don
+- **What:** Expanded the test suite to prove share-accounting properties:
+  `test_MultipleEscrowsIsolatedYield` (settling one escrow never credits another's
+  parties; unsettled value stays pooled; totals conserved) and
+  `test_YieldProportionalToDepositTiming` (yield attributed by time-in-pool, not
+  equally). Added `Parties`/`_parties`/`_credited`/`_fund` test helpers; refactored
+  to keep within the EVM stack limit (no `via_ir`). `forge test` 9/9 green.
+- **Files touched:** `test/EscrowVault.t.sol`.

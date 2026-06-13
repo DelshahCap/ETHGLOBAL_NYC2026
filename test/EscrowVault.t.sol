@@ -60,6 +60,35 @@ contract EscrowVaultTest is Test {
         usdc.mint(address(yieldSource), amount);
     }
 
+    struct Parties {
+        address tenant;
+        address landlord;
+        address contractor;
+    }
+
+    /// @dev Distinct tenant/landlord/contractor addresses derived from a label.
+    function _parties(string memory label) internal returns (Parties memory) {
+        return Parties({
+            tenant: makeAddr(string.concat(label, "-tenant")),
+            landlord: makeAddr(string.concat(label, "-landlord")),
+            contractor: makeAddr(string.concat(label, "-contractor"))
+        });
+    }
+
+    /// @dev Total withdrawable credited to an escrow's three parties.
+    function _credited(Parties memory p) internal view returns (uint256) {
+        return vault.withdrawable(p.tenant) + vault.withdrawable(p.landlord) + vault.withdrawable(p.contractor);
+    }
+
+    /// @dev Fund an existing escrow with an arbitrary principal from the payer.
+    function _fund(uint256 id, uint256 amount) internal {
+        usdc.mint(payer, amount);
+        vm.startPrank(payer);
+        usdc.approve(address(vault), amount);
+        vault.fund(id, amount);
+        vm.stopPrank();
+    }
+
     // --- tests ---
 
     function test_FundDepositsToYieldSource() public {
@@ -187,5 +216,102 @@ contract EscrowVaultTest is Test {
             pooledYield,
             "all pooled yield distributed"
         );
+    }
+
+    /// @dev Two escrows funded together, settled one at a time: settling A must not
+    ///      touch B's parties, and B's value stays in the pool until B settles.
+    function test_MultipleEscrowsIsolatedYield() public {
+        uint256 dust = 2; // integer-division tolerance (micro-USDC)
+        Parties memory a = _parties("iso-a");
+        Parties memory b = _parties("iso-b");
+        uint256 pA = 1_000e6;
+        uint256 feeA = 200e6;
+        uint256 pB = 4_000e6;
+        uint256 Y = 500e6; // pooled yield accrued while both are locked
+
+        uint256 idA = vault.createEscrow(a.tenant, a.landlord, a.contractor, VIOLATION_ID, feeA);
+        uint256 idB = vault.createEscrow(b.tenant, b.landlord, b.contractor, VIOLATION_ID + 1, 0);
+        _fund(idA, pA);
+        _fund(idB, pB);
+
+        // Yield accrues across the pool; both funded at par, so split is by principal.
+        _simulateYield(Y);
+        uint256 expectedYieldA = Y * pA / (pA + pB);
+        uint256 expectedYieldB = Y * pB / (pA + pB);
+
+        // --- Settle A (Closed) ---
+        vm.prank(oracle);
+        vault.updateStatus(idA, EscrowVault.Status.Closed);
+
+        assertEq(vault.withdrawable(a.contractor), feeA, "A contractor = fee");
+        assertEq(vault.withdrawable(a.landlord), pA - feeA, "A landlord = principal - fee");
+        assertApproxEqAbs(vault.withdrawable(a.tenant), expectedYieldA, dust, "A tenant = A's yield");
+
+        // B's parties untouched; B's value still sitting in the pool.
+        assertEq(vault.withdrawable(b.tenant), 0, "B tenant still zero");
+        assertEq(vault.withdrawable(b.landlord), 0, "B landlord still zero");
+        assertEq(vault.withdrawable(b.contractor), 0, "B contractor still zero");
+        assertApproxEqAbs(yieldSource.totalAssets(), pB + expectedYieldB, dust, "B value remains pooled");
+
+        // --- Settle B (Dismissed) ---
+        vm.prank(oracle);
+        vault.updateStatus(idB, EscrowVault.Status.Dismissed);
+
+        assertEq(vault.withdrawable(b.landlord), pB, "B landlord = principal");
+        assertApproxEqAbs(vault.withdrawable(b.tenant), expectedYieldB, dust, "B tenant = B's yield");
+
+        // Isolation: settling B never altered A's credited balances.
+        assertEq(vault.withdrawable(a.contractor), feeA, "A contractor unchanged");
+        assertEq(vault.withdrawable(a.landlord), pA - feeA, "A landlord unchanged");
+        assertEq(vault.withdrawable(b.contractor), 0, "B contractor never paid (Dismissed)");
+
+        // Total credited across all parties ≈ total deposited + total yield.
+        assertApproxEqAbs(_credited(a) + _credited(b), pA + pB + Y, dust, "credited ~= deposits + yield");
+    }
+
+    /// @dev Yield is attributed by time-in-pool, not equally: A is alone for the first
+    ///      tranche of yield, so it captures all of it; B (joining later) earns nothing
+    ///      from yield that accrued before it deposited.
+    function test_YieldProportionalToDepositTiming() public {
+        uint256 dust = 2;
+        Parties memory a = _parties("time-a");
+        Parties memory b = _parties("time-b");
+        uint256 pA = 1_000e6;
+        uint256 pB = 2_000e6;
+        uint256 Y1 = 1_000e6; // accrues while ONLY A is in the pool
+        uint256 Y2 = 800e6; // accrues after B joins
+
+        uint256 idA = vault.createEscrow(a.tenant, a.landlord, a.contractor, VIOLATION_ID, 0);
+        uint256 idB = vault.createEscrow(b.tenant, b.landlord, b.contractor, VIOLATION_ID + 1, 0);
+
+        // A joins, early yield accrues while A is alone.
+        _fund(idA, pA);
+        _simulateYield(Y1);
+
+        // B joins at the lifted share price (so B buys fewer shares per USDC),
+        // then more yield accrues with both present.
+        _fund(idB, pB);
+        _simulateYield(Y2);
+
+        // Expected: A = all of Y1 + A's time-weighted share of Y2; B = only its share of Y2.
+        // With pA=1000, Y1=1000 (price 2.0), pB=2000 -> B mints 1000 shares; both hold
+        // 1000 shares when Y2 accrues, so Y2 splits 50/50.
+        uint256 expectedYieldA = Y1 + Y2 / 2;
+        uint256 expectedYieldB = Y2 / 2;
+
+        vm.prank(oracle);
+        vault.updateStatus(idA, EscrowVault.Status.Dismissed);
+        vm.prank(oracle);
+        vault.updateStatus(idB, EscrowVault.Status.Dismissed);
+
+        assertEq(vault.withdrawable(a.landlord), pA, "A landlord = principal");
+        assertEq(vault.withdrawable(b.landlord), pB, "B landlord = principal");
+        assertApproxEqAbs(vault.withdrawable(a.tenant), expectedYieldA, dust, "A captured early + shared yield");
+        assertApproxEqAbs(vault.withdrawable(b.tenant), expectedYieldB, dust, "B earned only post-join yield");
+
+        // B got NONE of the early yield: its yield is strictly below Y1 despite a
+        // larger principal -> proves time-in-pool, not principal-share-of-total, drives it.
+        assertLt(vault.withdrawable(b.tenant), Y1, "B excluded from pre-join yield");
+        assertGt(vault.withdrawable(a.tenant), vault.withdrawable(b.tenant), "earlier depositor earns more");
     }
 }
