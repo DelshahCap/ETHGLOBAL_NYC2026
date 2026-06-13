@@ -19,3 +19,12 @@ artifacts that directed the AI live in [specs/](specs/).
 - **Notes:** Each step landed as its own commit. `forge init` was deferred —
   Foundry is not yet installed in this environment; the contracts will be
   scaffolded in a later session.
+
+### 2026-06-13 — Foundry setup + EscrowVault skeleton
+- **Directed by:** Don
+- **What:** Installed Foundry, initialized the project over the existing repo
+  (preserving LICENSE/README.md/CLAUDE.md), added OpenZeppelin contracts with
+  remappings, and wrote the `EscrowVault` + `IYieldSource` state/signature
+  skeleton (TODO bodies, no release logic yet). `forge build` passes.
+- **Files touched:** `foundry.toml`, `src/EscrowVault.sol`, `src/IYieldSource.sol`,
+  `specs/escrow-vault.md`, `lib/` (forge-std, openzeppelin-contracts), `.gitmodules`.
