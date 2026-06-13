@@ -17,6 +17,7 @@ contract EscrowVault {
         address contractor;
         uint256 violationId;   // HPD ViolationID
         uint256 principal;     // USDC deposited (6 decimals)
+        uint256 shares;        // yield-source shares minted for this escrow's deposit
         uint256 contractorFee; // USDC paid to contractor on Closed (6 decimals)
         Status  status;
         bool    funded;
@@ -47,6 +48,7 @@ contract EscrowVault {
     error NotFunded();
     error AlreadySettled();
     error NothingToWithdraw();
+    error FeeExceedsPrincipal();
 
     modifier onlyOwner() { if (msg.sender != owner) revert NotOwner(); _; }
     modifier onlyOracle() { if (msg.sender != oracle) revert NotOracle(); _; }
@@ -82,6 +84,7 @@ contract EscrowVault {
             contractor: contractor,
             violationId: violationId,
             principal: 0,
+            shares: 0,
             contractorFee: contractorFee,
             status: Status.Open,
             funded: false,
@@ -94,11 +97,12 @@ contract EscrowVault {
         Escrow storage e = escrows[id];
         if (e.tenant == address(0)) revert EscrowNotFound();
         if (e.funded) revert AlreadyFunded();
+        if (e.contractorFee > amount) revert FeeExceedsPrincipal();
         e.principal = amount;
         e.funded = true;
         usdc.transferFrom(msg.sender, address(this), amount);
         usdc.approve(address(yieldSource), amount);
-        yieldSource.deposit(amount);
+        e.shares = yieldSource.deposit(amount);
         emit Funded(id, amount);
     }
 
@@ -117,24 +121,26 @@ contract EscrowVault {
 
     function _settle(uint256 id) internal {
         Escrow storage e = escrows[id];
-        // Pull principal + yield back out of the yield source.
-        uint256 yield = yieldSource.accruedYield();
-        uint256 total = e.principal + yield;
-        yieldSource.withdraw(total);
+        e.settled = true; // CEI: set before external call
+
+        // Redeem only this escrow's shares -> its principal + its own proportional yield.
+        uint256 assets = yieldSource.redeem(e.shares);
+        uint256 p = e.principal <= assets ? e.principal : assets; // principal portion (clamped if ever lossy)
+        uint256 y = assets - p; // this escrow's own yield
 
         // Yield always goes to the tenant.
-        withdrawable[e.tenant] += yield;
+        withdrawable[e.tenant] += y;
 
         if (e.status == Status.Closed) {
             // Corrected: contractor takes its fee, landlord takes the remainder.
-            withdrawable[e.contractor] += e.contractorFee;
-            withdrawable[e.landlord] += e.principal - e.contractorFee;
+            uint256 fee = e.contractorFee <= p ? e.contractorFee : p;
+            withdrawable[e.contractor] += fee;
+            withdrawable[e.landlord] += p - fee;
         } else if (e.status == Status.Dismissed) {
             // Dismissed: full principal to the landlord.
-            withdrawable[e.landlord] += e.principal;
+            withdrawable[e.landlord] += p;
         }
 
-        e.settled = true;
         emit Settled(id, e.status);
     }
 

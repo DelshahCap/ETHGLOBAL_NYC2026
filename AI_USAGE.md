@@ -38,3 +38,14 @@ artifacts that directed the AI live in [specs/](specs/).
   `forge build` clean; `forge test` 6/6 green.
 - **Files touched:** `src/MockYieldSource.sol`, `src/EscrowVault.sol`,
   `test/EscrowVault.t.sol`, `script/Deploy.s.sol`, `specs/escrow-vault.md`.
+
+### 2026-06-13 — Share-based yield accounting (multi-escrow)
+- **Directed by:** Don (pasted exact `IYieldSource`/`MockYieldSource` + step-by-step
+  spec for the breaking change).
+- **What:** Reworked the yield source to an ERC-4626-style share model so each escrow
+  redeems its own principal + only its proportional share of pooled yield. One commit
+  (breaking interface change). Added a multi-escrow proportional-yield test; updated
+  the existing tests for the new struct/getter shape and refreshed the spec.
+  `forge build` clean; `forge test` 7/7 green.
+- **Files touched:** `src/IYieldSource.sol`, `src/MockYieldSource.sol`,
+  `src/EscrowVault.sol`, `test/EscrowVault.t.sol`, `specs/escrow-vault.md`.

@@ -23,10 +23,12 @@ in if the CRE→Arc write path isn't ready for the demo. No party can trigger re
 unilaterally — release keys off the official posted status only.
 
 ## Yield source
-Escrowed USDC is deposited into an `IYieldSource` (a yield-bearing destination).
-The demo uses a `MockYieldSource`; production swaps in a real on-Arc USDC vault. On
-settlement the vault pulls `principal + accruedYield` back out before crediting
-recipients.
+Escrowed USDC is deposited into an `IYieldSource`, a **share-based (ERC-4626-shape)**
+yield vault. On `fund`, the vault deposits the escrow's USDC and records the `shares`
+minted for it. On settlement the vault redeems exactly those shares, recovering the
+escrow's principal plus only its own proportional slice of the pooled yield. The demo
+uses a `MockYieldSource` (yield simulated by sending extra USDC into the pool, which
+lifts share value); production drops in any real ERC-4626 USDC vault.
 
 ## Pull-payment withdrawals
 Settlement credits per-account `withdrawable[]` balances rather than pushing transfers.
@@ -39,19 +41,18 @@ affected account.
 1. `createEscrow(tenant, landlord, contractor, violationId, contractorFee)` → record,
    status `Open`. `contractorFee` is the USDC paid to the contractor on a `Closed`
    outcome; the landlord receives `principal - contractorFee`.
-2. `fund(id, amount)` → `transferFrom` USDC, deposit to yield source, mark funded.
+2. `fund(id, amount)` → `transferFrom` USDC, deposit to the yield source, store the
+   minted `shares` on the escrow, mark funded. Reverts if `contractorFee > amount`.
 3. `updateStatus(id, status)` (oracle) → record status; if terminal, `_settle`.
-4. `_settle(id)` → withdraw principal + yield from yield source, credit `withdrawable[]`.
+4. `_settle(id)` → redeem the escrow's `shares` for `assets`; split into principal `p`
+   (clamped to `assets`) and yield `y = assets - p`; credit `withdrawable[]`.
 5. `withdraw()` → each recipient pulls its balance.
 
-## Yield accounting — single active escrow (for now)
-The current `_settle` reads `yieldSource.accruedYield()` for the whole source and
-credits all of it to the settling escrow's tenant. That is correct only with **one
-active escrow at a time**, which is the demo assumption. Supporting many concurrent
-escrows needs pooled, per-escrow yield accounting (e.g. ERC-4626 shares) so each
-tenant earns yield proportional to their own locked principal — noted as future work.
-
-## Status: skeleton only
-Current code is state + signatures; the release logic (`createEscrow`, `fund`,
-`updateStatus`, `_settle`, `withdraw`) is stubbed with `TODO`/`revert` and not yet
-implemented.
+## Yield accounting — multi-escrow correct
+Yield is attributed **per escrow via shares**. Each escrow's deposit mints shares in
+the pooled yield source; settlement redeems exactly that escrow's shares, so it
+recovers its own principal plus only its proportional slice of pooled yield. Many
+escrows can be funded and settled concurrently with correct, independent accounting —
+no single-active-escrow assumption. Settlement follows checks-effects-interactions:
+`settled` is set before the external `redeem` call. The `MockYieldSource` has no
+ERC-4626 inflation-attack guard and is demo-only; a production ERC-4626 vault should.

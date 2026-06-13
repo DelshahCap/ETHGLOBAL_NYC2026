@@ -66,8 +66,8 @@ contract EscrowVaultTest is Test {
         uint256 id = _createAndFund(FEE);
 
         assertEq(usdc.balanceOf(address(yieldSource)), PRINCIPAL, "yield source holds principal");
-        assertEq(yieldSource.principal(), PRINCIPAL, "tracked principal");
-        (,,,, uint256 principal,,, bool funded, bool settled) = vault.escrows(id);
+        assertEq(yieldSource.totalShares(), PRINCIPAL, "shares minted 1:1 on first deposit");
+        (,,,, uint256 principal,,,, bool funded, bool settled) = vault.escrows(id);
         assertEq(principal, PRINCIPAL);
         assertTrue(funded);
         assertFalse(settled);
@@ -112,7 +112,7 @@ contract EscrowVaultTest is Test {
         vm.prank(oracle);
         vault.updateStatus(id, EscrowVault.Status.Open);
 
-        (,,,,,,, bool funded, bool settled) = vault.escrows(id);
+        (,,,,,,,, bool funded, bool settled) = vault.escrows(id);
         assertTrue(funded);
         assertFalse(settled, "not settled while Open");
         assertEq(vault.withdrawable(tenant), 0);
@@ -141,5 +141,51 @@ contract EscrowVaultTest is Test {
         vm.expectRevert(EscrowVault.NothingToWithdraw.selector);
         vm.prank(landlord);
         vault.withdraw();
+    }
+
+    /// @dev The point of share-based accounting: two concurrent escrows each redeem
+    ///      their own principal + only their proportional slice of pooled yield.
+    function test_MultiEscrowProportionalYield() public {
+        address tenantA = makeAddr("tenantA");
+        address landlordA = makeAddr("landlordA");
+        address tenantB = makeAddr("tenantB");
+        address landlordB = makeAddr("landlordB");
+
+        uint256 pA = 1_000e6; // escrow A principal (25% of pool)
+        uint256 pB = 3_000e6; // escrow B principal (75% of pool)
+        uint256 pooledYield = 400e6;
+
+        uint256 idA = vault.createEscrow(tenantA, landlordA, contractor, VIOLATION_ID, 0);
+        uint256 idB = vault.createEscrow(tenantB, landlordB, contractor, VIOLATION_ID + 1, 0);
+
+        usdc.mint(payer, pA + pB);
+        vm.startPrank(payer);
+        usdc.approve(address(vault), pA + pB);
+        vault.fund(idA, pA);
+        vault.fund(idB, pB);
+        vm.stopPrank();
+
+        // Yield accrues across the whole pool while both escrows are locked.
+        _simulateYield(pooledYield);
+
+        vm.prank(oracle);
+        vault.updateStatus(idA, EscrowVault.Status.Dismissed);
+        vm.prank(oracle);
+        vault.updateStatus(idB, EscrowVault.Status.Dismissed);
+
+        // Each landlord recovers full principal.
+        assertEq(vault.withdrawable(landlordA), pA, "landlord A principal");
+        assertEq(vault.withdrawable(landlordB), pB, "landlord B principal");
+
+        // Yield split proportionally to principal: A 25%, B 75%.
+        assertEq(vault.withdrawable(tenantA), pooledYield * pA / (pA + pB), "tenant A yield = 25%");
+        assertEq(vault.withdrawable(tenantB), pooledYield * pB / (pA + pB), "tenant B yield = 75%");
+
+        // No yield stranded across the two settlements.
+        assertEq(
+            vault.withdrawable(tenantA) + vault.withdrawable(tenantB),
+            pooledYield,
+            "all pooled yield distributed"
+        );
     }
 }
