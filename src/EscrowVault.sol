@@ -15,8 +15,9 @@ contract EscrowVault {
         address tenant;
         address landlord;
         address contractor;
-        uint256 violationId; // HPD ViolationID
-        uint256 principal;   // USDC deposited (6 decimals)
+        uint256 violationId;   // HPD ViolationID
+        uint256 principal;     // USDC deposited (6 decimals)
+        uint256 contractorFee; // USDC paid to contractor on Closed (6 decimals)
         Status  status;
         bool    funded;
         bool    settled;
@@ -41,6 +42,8 @@ contract EscrowVault {
 
     error NotOwner();
     error NotOracle();
+    error EscrowNotFound();
+    error AlreadyFunded();
 
     modifier onlyOwner() { if (msg.sender != owner) revert NotOwner(); _; }
     modifier onlyOracle() { if (msg.sender != oracle) revert NotOracle(); _; }
@@ -62,14 +65,38 @@ contract EscrowVault {
         emit YieldSourceUpdated(address(_yieldSource));
     }
 
-    function createEscrow(address tenant, address landlord, address contractor, uint256 violationId)
-        external returns (uint256 id)
-    {
-        revert("TODO: createEscrow"); // create record, status Open, emit EscrowCreated
+    function createEscrow(
+        address tenant,
+        address landlord,
+        address contractor,
+        uint256 violationId,
+        uint256 contractorFee
+    ) external returns (uint256 id) {
+        id = nextEscrowId++;
+        escrows[id] = Escrow({
+            tenant: tenant,
+            landlord: landlord,
+            contractor: contractor,
+            violationId: violationId,
+            principal: 0,
+            contractorFee: contractorFee,
+            status: Status.Open,
+            funded: false,
+            settled: false
+        });
+        emit EscrowCreated(id, tenant, violationId);
     }
 
     function fund(uint256 id, uint256 amount) external {
-        revert("TODO: fund"); // transferFrom USDC (6dp), deposit to yieldSource, mark funded
+        Escrow storage e = escrows[id];
+        if (e.tenant == address(0)) revert EscrowNotFound();
+        if (e.funded) revert AlreadyFunded();
+        e.principal = amount;
+        e.funded = true;
+        usdc.transferFrom(msg.sender, address(this), amount);
+        usdc.approve(address(yieldSource), amount);
+        yieldSource.deposit(amount);
+        emit Funded(id, amount);
     }
 
     /// @notice Called by the CRE forwarder/relayer with the verified HPD status.
