@@ -9,6 +9,8 @@ import { DEMO } from '@/lib/demo'
 import { FAUCET } from '@/lib/chain'
 import { AddFundsButton } from '@/app/components/AddFundsButton'
 import { fetchParties, type Parties } from '@/lib/profile'
+import { VIOLATIONS, violationLabel } from '@/lib/violations'
+import { fetchBids, acceptedBidFor, type Bid } from '@/lib/bids'
 // `import type` is erased at build, so the `server-only` guard in store.ts never
 // reaches this client bundle. Keep it type-only — a value import here would break the build.
 import type { Violation } from '@/lib/server/store'
@@ -24,6 +26,7 @@ export default function TenantView() {
     fetch('/api/violation').then((r) => r.json()).then(setViolation).catch(() => {})
   }, [])
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
+  const [selectedRow, setSelectedRow] = useState<number>(VIOLATIONS[0]?.row ?? 0)
 
   return (
     <main
@@ -39,7 +42,7 @@ export default function TenantView() {
         </header>
 
         {appId ? (
-          <Portal violation={violation} />
+          <Portal violation={violation} selectedRow={selectedRow} setSelectedRow={setSelectedRow} />
         ) : (
           <Card>
             <p className="text-sm text-[#5A6B85]">
@@ -52,7 +55,11 @@ export default function TenantView() {
   )
 }
 
-function Portal({ violation }: { violation: Violation | null }) {
+function Portal({ violation, selectedRow, setSelectedRow }: {
+  violation: Violation | null
+  selectedRow: number
+  setSelectedRow: (row: number) => void
+}) {
   const { ready, authenticated, login, logout } = usePrivy()
   const { address, getWriteWallet } = useEscrowWallet()
   const [bal, setBal] = useState<bigint | null>(null)
@@ -61,15 +68,27 @@ function Portal({ violation }: { violation: Violation | null }) {
   const [wd, setWd] = useState<bigint | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
-  const [violationId, setViolationId] = useState(DEMO.violationId)
   const [parties, setParties] = useState<Parties>({})
-  const partiesReady = !!(parties.landlord && parties.contractor)
+  const [bids, setBids] = useState<Bid[]>([])
+  const [rent, setRent] = useState(DEMO.principal)
+  const [interest, setInterest] = useState<bigint | null>(null) // interest the tenant received on settlement
 
-  // Resolve the landlord/contractor wallets from real sign-ups (poll so they
-  // appear once those parties register) instead of hardcoded env addresses.
+  // The chosen catalog violation. The tenant always creates against the OPEN
+  // HPD number; the admin/oracle settles it Closed from the admin tab.
+  const selected = VIOLATIONS.find((v) => v.row === selectedRow) ?? VIOLATIONS[0]
+  const violationId = selected ? selected.open.violationId : ''
+  // The contractor + fee come from the bid the landlord accepted for this violation.
+  const acceptedBid = selected ? acceptedBidFor(bids, selected.row) : undefined
+  const canCreate = !!(parties.landlord && acceptedBid)
+
+  // Resolve the landlord from sign-ups and the contractor bids (poll so both
+  // appear as those parties act) instead of hardcoded env addresses.
   useEffect(() => {
     let on = true
-    const tick = () => fetchParties().then((p) => { if (on) setParties(p) }).catch(() => {})
+    const tick = () => {
+      fetchParties().then((p) => { if (on) setParties(p) }).catch(() => {})
+      fetchBids().then((b) => { if (on) setBids(b) }).catch(() => {})
+    }
     tick()
     const t = setInterval(tick, 5000)
     return () => { on = false; clearInterval(t) }
@@ -110,32 +129,42 @@ function Portal({ violation }: { violation: Violation | null }) {
 
   const onCreate = run('Creating escrow', async () => {
     if (!address) throw new Error('No wallet connected')
-    if (!/^\d+$/.test(violationId.trim())) throw new Error('Enter a numeric HPD violation ID')
-    if (!parties.landlord || !parties.contractor) {
-      throw new Error('Waiting for a landlord and contractor to sign up')
-    }
+    if (!/^\d+$/.test(violationId)) throw new Error('Select a violation')
+    if (!parties.landlord) throw new Error('Waiting for a landlord to sign up')
+    if (!acceptedBid) throw new Error('No accepted contractor bid for this violation yet')
     const w = await getWriteWallet()
     await createEscrow(w, {
       tenant: address,
       landlord: parties.landlord as `0x${string}`,
-      contractor: parties.contractor as `0x${string}`,
-      violationId: violationId.trim(),
-      contractorFee: toMicro(DEMO.contractorFee),
+      contractor: acceptedBid.contractor as `0x${string}`,
+      violationId,
+      contractorFee: toMicro(acceptedBid.fee),
     })
   })
   const onFund = run('Funding rent', async () => {
     if (!esc) throw new Error('No escrow')
-    // Guard the FeeExceedsPrincipal() revert: the contract rejects fund if the
-    // contractor fee is larger than the funded amount.
-    if (toMicro(DEMO.contractorFee) > toMicro(DEMO.principal)) {
-      throw new Error('Contractor fee is larger than the rent amount')
-    }
+    const principal = toMicro(rent)
+    if (principal <= 0n) throw new Error('Enter a rent amount')
+    // Guard the FeeExceedsPrincipal() revert: fund reverts if the contractor fee
+    // (set at creation) is larger than the funded rent.
+    if (esc.contractorFee > principal) throw new Error('Contractor fee is larger than the rent amount')
     const w = await getWriteWallet()
-    await fundEscrow(w, BigInt(esc.id), toMicro(DEMO.principal))
+    await fundEscrow(w, BigInt(esc.id), principal)
   })
-  const onClaim = run('Claiming yield', async () => {
-    const w = await getWriteWallet()
-    await claim(w)
+  // "Receive funds": once the admin/oracle has closed the violation (settling the
+  // escrow on-chain), the tenant withdraws the interest they're owed. The tenant's
+  // withdrawable on a closed escrow is the accrued interest — principal went to the
+  // landlord/contractor — so capture it to show what they received.
+  const onReceive = run('Receiving funds', async () => {
+    if (!esc) throw new Error('No escrow')
+    if (!esc.settled) throw new Error('Not released yet — waiting for HPD to close the violation')
+    if (!address) throw new Error('No wallet connected')
+    const claimable = await readWithdrawable(address)
+    if (claimable > 0n) {
+      const w = await getWriteWallet()
+      await claim(w)
+    }
+    setInterest(claimable)
   })
 
   if (!ready) {
@@ -166,13 +195,13 @@ function Portal({ violation }: { violation: Violation | null }) {
         amount={heroAmount}
         caption={
           phase === 'settled'
-            ? 'The violation closed on-chain. The yield you earned is ready to claim.'
+            ? 'The violation closed on-chain. The interest your rent earned while locked is yours.'
             : phase === 'locked'
-              ? `Locked in escrow, earning yield until HPD resolves violation #${esc!.violationId.toString()}.`
+              ? `Locked in escrow, earning interest until HPD resolves violation #${esc!.violationId.toString()}.`
               : 'Create your escrow, then fund this month’s rent to lock it.'
         }
-        yieldLabel={esc?.settled ? 'Your yield' : esc?.funded ? 'Yield so far' : undefined}
-        yieldValue={wd != null ? formatUsdc(wd) : '…'}
+        yieldLabel={esc?.settled ? 'Interest earned' : esc?.funded ? 'Interest so far' : undefined}
+        yieldValue={interest != null ? formatUsdc(interest) : wd != null ? formatUsdc(wd) : '…'}
       />
 
       <ViolationCard violation={violation} />
@@ -181,42 +210,82 @@ function Portal({ violation }: { violation: Violation | null }) {
         {/* state machine */}
         {esc == null && (
           <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label htmlFor="violation" className="block text-sm font-medium">Open HPD violation on your apartment</label>
+              <select
+                id="violation"
+                value={selectedRow}
+                onChange={(e) => setSelectedRow(Number(e.target.value))}
+                className="w-full rounded-xl border border-[#D7E0EC] bg-white px-4 py-3 text-base outline-none focus:border-[#1D4ED8]"
+              >
+                {VIOLATIONS.map((v) => (
+                  <option key={v.row} value={v.row}>{violationLabel(v)} — #{v.open.violationId}</option>
+                ))}
+              </select>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-[#5A6B85]">The oracle watches this HPD ID to release your rent.</span>
+                <span className={`${MONO} font-semibold text-[#B45309]`}>#{violationId}</span>
+              </div>
+            </div>
+            <div className="rounded-xl bg-[#F8FAFC] px-3 py-2.5 text-xs">
+              {acceptedBid ? (
+                <span className="text-[#445166]">
+                  Contractor accepted — fee <span className="font-semibold">{acceptedBid.fee} USDC</span> to{' '}
+                  <span className={MONO}>{short(acceptedBid.contractor)}</span>
+                </span>
+              ) : (
+                <span className="text-[#B45309]">No accepted contractor bid yet — a contractor must bid and the landlord must accept it.</span>
+              )}
+            </div>
             <label className="block text-sm font-medium">
-              HPD violation ID
+              Monthly rent to send to escrow (USDC)
               <input
-                value={violationId}
-                onChange={(e) => setViolationId(e.target.value)}
-                inputMode="numeric"
-                placeholder="e.g. 18100032"
+                value={rent}
+                onChange={(e) => setRent(e.target.value)}
+                inputMode="decimal"
                 className={`mt-1.5 w-full rounded-xl border border-[#D7E0EC] bg-white px-4 py-3 text-base outline-none focus:border-[#1D4ED8] ${MONO}`}
               />
-              <span className="mt-1.5 block text-xs text-[#5A6B85]">
-                The open violation on your apartment — the oracle watches this ID to release your rent.
-              </span>
             </label>
-            {!partiesReady && (
-              <p className="text-xs text-[#B45309]">
-                Waiting for a landlord and contractor to sign up — each needs an account before you can create the escrow.
-              </p>
-            )}
-            <Button busy={busy || !partiesReady} onClick={onCreate}>Create my rent escrow</Button>
+            {!parties.landlord && <p className="text-xs text-[#B45309]">Waiting for a landlord to sign up.</p>}
+            <Button busy={busy || !canCreate} onClick={onCreate}>Create my rent escrow</Button>
           </div>
         )}
 
         {esc && !esc.funded && role === 'tenant' && (
-          <Button busy={busy} onClick={onFund}>Fund this month’s rent — {DEMO.principal} USDC</Button>
+          <div className="space-y-3">
+            <label className="block text-sm font-medium">
+              Rent to send to escrow (USDC)
+              <input
+                value={rent}
+                onChange={(e) => setRent(e.target.value)}
+                inputMode="decimal"
+                className={`mt-1.5 w-full rounded-xl border border-[#D7E0EC] bg-white px-4 py-3 text-base outline-none focus:border-[#1D4ED8] ${MONO}`}
+              />
+            </label>
+            <Button busy={busy} onClick={onFund}>Send rent to escrow — {rent} USDC</Button>
+          </div>
         )}
 
         {esc && esc.funded && !esc.settled && (
           <p className="text-center text-sm text-[#5A6B85]">
-            Nothing to do — your rent is safe. We’ll unlock it automatically when the violation closes.
+            Nothing to do — your rent is safe. It releases automatically once HPD closes the violation.
           </p>
         )}
 
-        {esc && esc.settled && (
-          wd != null && wd > 0n
-            ? <Button busy={busy} onClick={onClaim}>Claim my yield — {formatUsdc(wd)}</Button>
-            : <p className="text-center text-sm text-[#5A6B85]">Resolved. Your principal returned to the landlord; no yield to claim.</p>
+        {esc && esc.settled && interest == null && (
+          <Button busy={busy} onClick={onReceive}>
+            {wd != null && wd > 0n ? `Receive my interest — ${formatUsdc(wd)}` : 'Receive funds from escrow'}
+          </Button>
+        )}
+
+        {interest != null && (
+          interest > 0n
+            ? <div className="rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5] p-4 text-center">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#047857]">Interest received</p>
+                <p className={`mt-1 text-2xl font-bold text-[#047857] ${DISPLAY}`}>{formatUsdc(interest)}</p>
+                <p className="mt-1 text-xs text-[#5A6B85]">Your principal was released to the landlord; the interest it earned is yours.</p>
+              </div>
+            : <p className="text-center text-sm text-[#5A6B85]">Resolved — your principal returned to the landlord; no interest accrued this period.</p>
         )}
 
         {msg && <p className="mt-3 text-center text-xs text-[#5A6B85]">{msg}</p>}
@@ -307,8 +376,9 @@ function WalletRow({ address, bal, onLogout, onFunded }: { address?: string; bal
       <div className="rounded-2xl border border-[#D7E0EC] bg-white px-4 py-3 text-sm">
         <div className="flex items-center justify-between">
           <div>
-            <span className={`text-[#0E1A33] ${MONO}`}>{short(address)}</span>
-            <span className="ml-2 text-[#5A6B85]">{bal != null ? formatUsdc(bal) : '…'}</span>
+            <p className="text-xs text-[#5A6B85]">Wallet balance</p>
+            <p className={`text-lg font-bold text-[#0E1A33] ${DISPLAY}`}>{bal != null ? formatUsdc(bal) : '…'}</p>
+            <span className={`text-xs text-[#8190A6] ${MONO}`}>{short(address)}</span>
           </div>
           <button onClick={onLogout} className="text-xs text-[#5A6B85] underline">Log out</button>
         </div>

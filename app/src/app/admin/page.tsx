@@ -8,6 +8,7 @@ import { FunctionTester } from './components/FunctionTester'
 import { EventLog } from './components/EventLog'
 import { PrivyPanel } from './components/PrivyPanel'
 import { UsersPanel } from './components/UsersPanel'
+import { EscrowStatusToggle } from './components/EscrowStatusToggle'
 
 export default function AdminPage() {
   const [roles, setRoles] = useState<Roles | null>(null)
@@ -16,6 +17,7 @@ export default function AdminPage() {
     <main className="mx-auto max-w-4xl space-y-6 p-6">
       <h1 className="text-xl font-bold">Admin / Test Panel</h1>
       <StatusBar />
+      <EscrowStatusToggle />
       <RolePanel roles={roles} />
       <UsersPanel />
       <PrivyPanel />

@@ -8,6 +8,8 @@ import { formatUsdc } from '@/lib/usdc'
 import { FAUCET } from '@/lib/chain'
 import type { Violation } from '@/lib/server/store'
 import { AddFundsButton } from './AddFundsButton'
+import { ContractorBidPanel } from './ContractorBidPanel'
+import { LandlordBidsPanel } from './LandlordBidsPanel'
 
 // Desktop dashboard for the landlord and contractor. Both roles do the same
 // thing on-chain — watch the escrow and pull their share once it settles
@@ -97,6 +99,7 @@ export function PartyDashboard({ role }: { role: Role }) {
             <Button busy={false} onClick={() => login({ loginMethods: ['email'] })}>Log in with email</Button>
           </Card>
         ) : (
+          <>
           <div className="grid gap-5 md:grid-cols-5">
             {/* left: the money */}
             <section className="md:col-span-3 space-y-5">
@@ -139,6 +142,10 @@ export function PartyDashboard({ role }: { role: Role }) {
               <WalletRow address={address} bal={bal} onLogout={logout} email={user?.email?.address} onFunded={refresh} />
             </section>
           </div>
+
+          {role === 'contractor' && <ContractorBidPanel address={address} email={user?.email?.address} />}
+          {role === 'landlord' && <LandlordBidsPanel />}
+          </>
         )}
       </div>
     </main>
@@ -203,8 +210,9 @@ function WalletRow({ address, bal, onLogout, email, onFunded }: { address?: stri
         {email && <p className="mb-1 text-xs text-[#5A6B85]">{email}</p>}
         <div className="flex items-center justify-between">
           <div>
-            <span className={`text-[#0E1A33] ${MONO}`}>{short(address)}</span>
-            <span className="ml-2 text-[#5A6B85]">{bal != null ? formatUsdc(bal) : '…'}</span>
+            <p className="text-xs text-[#5A6B85]">Wallet balance</p>
+            <p className={`text-lg font-bold text-[#0E1A33] ${DISPLAY}`}>{bal != null ? formatUsdc(bal) : '…'}</p>
+            <span className={`text-xs text-[#8190A6] ${MONO}`}>{short(address)}</span>
           </div>
           <button onClick={onLogout} className="text-xs text-[#5A6B85] underline">Log out</button>
         </div>

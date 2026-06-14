@@ -149,3 +149,54 @@ live in [`docs/app/`](docs/app/).
   Typecheck, 9 unit tests, and production build green; `/api/parties` registers.
 - **Files touched:** `app/src/lib/server/profiles.ts`, `app/src/app/api/parties/route.ts`,
   `app/src/lib/profile.ts`, `app/src/app/tenant/page.tsx`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Violation catalog selector + open/closed header switch
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Bundled the provided `data/hpd-violations.json` into the app
+  (`app/src/data/`) with a typed loader (`lib/violations.ts`). Replaced the tenant's
+  manual HPD-ID text box with a dropdown selector of the 26 catalog violations, and
+  added a switch in the tenant header that flips the selected violation between its
+  open and closed HPD number (each record holds both states). The create card shows
+  the live effective `#id · status`. Typecheck + build green.
+- **Files touched:** `app/src/data/hpd-violations.json`, `app/src/lib/violations.ts`,
+  `app/src/app/tenant/page.tsx`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Rent field, contractor bids, landlord accept, settle-on-close
+- **Directed by:** Nilesh (frontend owner). Two design forks confirmed via Q&A:
+  toggle→Closed settles via the oracle key; accepted bid feeds the escrow.
+- **What:** Added a multi-party marketplace flow on top of the verified contract.
+  (1) Tenant rent **entry field** drives the funded principal (replacing fixed
+  DEMO.principal). (2) Contractor **bid** form (`ContractorBidPanel`) → KV-backed bids
+  (`/api/bids`, `lib/server/bids.ts`). (3) Landlord **accept** inbox
+  (`LandlordBidsPanel` → `/api/bids/accept`); the accepted bid's contractor + fee now
+  feed the tenant's `createEscrow` (replacing the latest-signup contractor + DEMO fee).
+  (4) Flipping the header switch to **Closed** drives a "Receive funds" action that calls
+  the server **oracle** key (`/api/tx/updateStatus`, status=Closed) to settle the escrow,
+  then the tenant withdraws any yield; landlord/contractor withdraw their shares on their
+  own dashboards. Contract-faithful: contractor paid their fee on Closed settlement.
+  Requires `ORACLE_PRIVATE_KEY` in the Vercel env for settlement. Also surfaced the
+  tenant's **interest payment** explicitly: on settlement the tenant's withdrawable is
+  the accrued interest (principal went to landlord/contractor), captured and shown in a
+  green "Interest received — N USDC" panel and the hero. Typecheck, 9 unit tests,
+  production build green; `/api/bids` + `/api/bids/accept` register.
+- **Files touched:** `app/src/lib/bids.ts`, `app/src/lib/server/bids.ts`,
+  `app/src/app/api/bids/route.ts`, `app/src/app/api/bids/accept/route.ts`,
+  `app/src/app/components/ContractorBidPanel.tsx`, `app/src/app/components/LandlordBidsPanel.tsx`,
+  `app/src/app/components/PartyDashboard.tsx`, `app/src/app/tenant/page.tsx`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Move settle toggle to admin; prominent wallet balance per portal
+- **Directed by:** Nilesh (frontend owner). Demo runs as four Chrome tabs:
+  tenant / landlord / contractor portals + the admin panel.
+- **What:** Moved the Open→Closed toggle out of the tenant header into the **admin tab**
+  as a new `EscrowStatusToggle` (reads the latest escrow; flipping to Closed has the
+  server oracle settle it via `/api/tx/updateStatus` and flips the shared violation
+  store to Closed). The portals already poll the chain, so tenant/landlord/contractor
+  react to settlement on their own — no cross-tab state. The tenant's "Receive my
+  interest" now keys off on-chain `esc.settled` (no longer settles itself); it just
+  withdraws. Made the **wallet balance prominent** ("Wallet balance" + bold amount) in
+  every portal's wallet row. Confirmed the tenant **rent is an editable field** (kept
+  from the prior batch). Typecheck, 9 unit tests, production build green.
+- **Files touched:** `app/src/app/tenant/page.tsx`,
+  `app/src/app/components/PartyDashboard.tsx`,
+  `app/src/app/admin/components/EscrowStatusToggle.tsx`, `app/src/app/admin/page.tsx`,
+  `AI_USAGE_app.md`.
