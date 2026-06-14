@@ -7,6 +7,13 @@ import {
   type Profile, type UserRole,
 } from '@/lib/profile'
 
+// Each role lands on its own dashboard after auth.
+const ROUTE_FOR: Record<UserRole, string> = {
+  tenant: '/tenant',
+  landlord: '/landlord',
+  contractor: '/contractor',
+}
+
 // Homepage entry point for real users.
 //
 // Flow (Privy v3): the button opens Privy's hosted email modal — it collects the
@@ -58,7 +65,7 @@ export function TenantAuth() {
     try {
       const saved = await saveProfile({ userId: user.id, role, email })
       setProfile(saved); setNeedRole(false)
-      router.push('/tenant')
+      router.push(ROUTE_FOR[role])
     } catch (e) {
       setErr((e as Error).message)
     } finally {
@@ -127,7 +134,7 @@ export function TenantAuth() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/tenant')} className="rounded bg-indigo-600 px-4 py-2 font-medium hover:bg-indigo-500">
+          <button onClick={() => router.push(profile ? ROUTE_FOR[profile.role] : '/tenant')} className="rounded bg-indigo-600 px-4 py-2 font-medium hover:bg-indigo-500">
             Go to my dashboard
           </button>
           <button onClick={logout} className="text-xs text-slate-500 underline">Log out</button>

@@ -18,9 +18,11 @@ export default function Home() {
         </section>
       )}
 
-      <div className="flex gap-4 border-t border-slate-800 pt-6">
+      <div className="flex flex-wrap gap-4 border-t border-slate-800 pt-6">
         <Link href="/admin" className="rounded bg-indigo-600 px-4 py-2 font-medium hover:bg-indigo-500">Admin / Test Panel</Link>
         <Link href="/tenant" className="rounded bg-slate-700 px-4 py-2 font-medium hover:bg-slate-600">Tenant View</Link>
+        <Link href="/landlord" className="rounded bg-slate-700 px-4 py-2 font-medium hover:bg-slate-600">Landlord View</Link>
+        <Link href="/contractor" className="rounded bg-slate-700 px-4 py-2 font-medium hover:bg-slate-600">Contractor View</Link>
       </div>
     </main>
   )

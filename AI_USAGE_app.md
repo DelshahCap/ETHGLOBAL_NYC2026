@@ -69,3 +69,23 @@ live in [`docs/app/`](docs/app/).
 - **Files touched:** `app/src/lib/profile.ts`, `app/src/lib/server/profiles.ts`,
   `app/src/app/api/profile/route.ts`, `app/src/app/components/TenantAuth.tsx`,
   `app/src/app/page.tsx`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Landlord & contractor dashboards + role-based routing
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Added desktop dashboards for the other two parties. Verified the on-chain
+  model first: `withdrawable(account)` + `withdraw()` is a pull-payment that already
+  serves all parties (landlord pulls principal, contractor pulls fee on the corrected
+  path), and create/fund stay tenant-only — so both roles share one `PartyDashboard`
+  component parameterized by role (status hero, HPD violation card, wallet row, and a
+  Withdraw button that appears once the escrow settles). Added `/landlord` and
+  `/contractor` routes (guarded on `NEXT_PUBLIC_PRIVY_APP_ID` like the tenant view),
+  wired role-based routing in `TenantAuth` (tenant→/tenant, landlord→/landlord,
+  contractor→/contractor) for both the post-signup step and returning users, and added
+  dev-console quick links. Reused the existing read/action layer and the tenant view's
+  RentShield visual language (self-contained to avoid touching the working tenant page).
+  Privy email login confirmed working live on Vercel (after allowlisting the preview
+  origin in the Privy dashboard — `invalid_origin` was a dashboard setting, not code).
+  Typecheck + production build green; `/landlord` and `/contractor` register.
+- **Files touched:** `app/src/app/components/PartyDashboard.tsx`,
+  `app/src/app/landlord/page.tsx`, `app/src/app/contractor/page.tsx`,
+  `app/src/app/components/TenantAuth.tsx`, `app/src/app/page.tsx`, `AI_USAGE_app.md`.
