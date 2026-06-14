@@ -7,9 +7,14 @@ import { readUsdcBalance, readWithdrawable, findEscrowFor, type EscrowView, type
 import { toMicro, formatUsdc } from '@/lib/usdc'
 import { DEMO, DEMO_PARTIES_SET } from '@/lib/demo'
 import { FAUCET } from '@/lib/chain'
+// `import type` is erased at build, so the `server-only` guard in store.ts never
+// reaches this client bundle. Keep it type-only — a value import here would break the build.
 import type { Violation } from '@/lib/server/store'
 
 const short = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '…')
+
+const DISPLAY = 'font-[family-name:var(--font-display)]'
+const MONO = 'font-[family-name:var(--font-mono)]'
 
 export default function TenantView() {
   const [violation, setViolation] = useState<Violation | null>(null)
@@ -19,39 +24,33 @@ export default function TenantView() {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
   return (
-    <main className="mx-auto max-w-md space-y-5 p-5">
-      <h1 className="text-2xl font-bold">Your apartment</h1>
-
-      <section className="rounded-lg border border-slate-800 p-4">
-        <h2 className="mb-1 text-sm font-semibold text-slate-300">HPD violation</h2>
-        {violation ? (
-          <div className="text-sm">
-            <p className="font-medium">#{violation.violationId} · {violation.address}</p>
-            <p className="text-slate-400">{violation.description}</p>
-            <p className="mt-1">status: <b>{violation.status}</b></p>
+    <main
+      className="min-h-screen bg-[#EAEFF6] font-[family-name:var(--font-body)] text-[#0E1A33]"
+    >
+      <div className="mx-auto max-w-[440px] space-y-4 px-5 pb-12 pt-6">
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield tone="#1D4ED8" size={22} />
+            <span className="text-sm font-semibold tracking-tight">RentShield</span>
           </div>
+          <span className="text-xs text-[#5A6B85]">NYC · HPD escrow</span>
+        </header>
+
+        {appId ? (
+          <Portal violation={violation} />
         ) : (
-          <p className="text-sm text-slate-500">No violation on file.</p>
+          <Card>
+            <p className="text-sm text-[#5A6B85]">
+              Sign-in unavailable — set <span className={MONO}>NEXT_PUBLIC_PRIVY_APP_ID</span> to enable login.
+            </p>
+          </Card>
         )}
-      </section>
-
-      {appId ? (
-        <TenantPortal />
-      ) : (
-        <p className="rounded-lg border border-slate-800 p-4 text-sm text-slate-500">
-          Sign-in unavailable — NEXT_PUBLIC_PRIVY_APP_ID is not set.
-        </p>
-      )}
-
-      <p className="text-xs text-slate-500">
-        Your rent is held in escrow while the HPD violation is open. Yield accrues to you and
-        becomes claimable once the violation is resolved on-chain.
-      </p>
+      </div>
     </main>
   )
 }
 
-function TenantPortal() {
+function Portal({ violation }: { violation: Violation | null }) {
   const { ready, authenticated, login, logout } = usePrivy()
   const { address, getWriteWallet } = useEscrowWallet()
   const [bal, setBal] = useState<bigint | null>(null)
@@ -74,7 +73,7 @@ function TenantPortal() {
   useEffect(() => {
     if (!address) return
     let on = true
-    const tick = () => refresh().catch((e) => { if (on) setMsg(`read error: ${(e as Error).message}`) })
+    const tick = () => refresh().catch((e) => { if (on) setMsg(`Couldn't read chain: ${(e as Error).message}`) })
     tick()
     const t = setInterval(tick, 5000)
     return () => { on = false; clearInterval(t) }
@@ -86,16 +85,16 @@ function TenantPortal() {
     try {
       await fn()
       await refresh()
-      setMsg(`${label} ✓`)
+      setMsg(`${label} done`)
     } catch (e) {
       const err = e as { shortMessage?: string; message?: string }
-      setMsg(`${label} ✗ ${err.shortMessage ?? err.message ?? 'failed'}`)
+      setMsg(`${label} failed — ${err.shortMessage ?? err.message ?? 'try again'}`)
     } finally {
       setBusy(false)
     }
   }
 
-  const onCreate = run('Create escrow', async () => {
+  const onCreate = run('Creating escrow', async () => {
     if (!address) throw new Error('No wallet connected')
     if (!/^\d+$/.test(violationId.trim())) throw new Error('Enter a numeric HPD violation ID')
     const w = await getWriteWallet()
@@ -107,106 +106,224 @@ function TenantPortal() {
       contractorFee: toMicro(DEMO.contractorFee),
     })
   })
-  const onFund = run('Fund rent', async () => {
+  const onFund = run('Funding rent', async () => {
     if (!esc) throw new Error('No escrow')
+    // Guard the FeeExceedsPrincipal() revert: the contract rejects fund if the
+    // contractor fee is larger than the funded amount.
+    if (toMicro(DEMO.contractorFee) > toMicro(DEMO.principal)) {
+      throw new Error('Contractor fee is larger than the rent amount')
+    }
     const w = await getWriteWallet()
     await fundEscrow(w, BigInt(esc.id), toMicro(DEMO.principal))
   })
-  const onClaim = run('Claim yield', async () => {
+  const onClaim = run('Claiming yield', async () => {
     const w = await getWriteWallet()
     await claim(w)
   })
 
-  if (!ready) return <Card><p className="text-sm text-slate-400">Loading…</p></Card>
-  if (!authenticated)
+  if (!ready) {
+    return <Card><p className="text-sm text-[#5A6B85]">Loading…</p></Card>
+  }
+
+  if (!authenticated) {
     return (
-      <Card>
-        <button
-          onClick={login}
-          className="w-full rounded-lg bg-emerald-600 px-4 py-3 font-semibold hover:bg-emerald-500"
-        >
-          Log in to your apartment
-        </button>
-      </Card>
+      <>
+        <Hero tone="protect" eyebrow="Your rent, protected" amount={DEMO.principal} caption="Held safely on-chain while HPD reviews the violation — and the yield is yours." />
+        <ViolationCard violation={violation} />
+        <Card>
+          <Button busy={false} onClick={login}>Log in to your apartment</Button>
+          <p className="text-center text-xs text-[#5A6B85]">Email or phone — a wallet is created for you.</p>
+        </Card>
+      </>
     )
+  }
+
+  const phase: 'protect' | 'locked' | 'settled' = esc?.settled ? 'settled' : esc?.funded ? 'locked' : 'protect'
+  const heroAmount = esc && esc.funded ? formatUsdc(esc.principal).replace(' USDC', '') : DEMO.principal
 
   return (
-    <Card>
-      <div className="flex items-center justify-between text-sm">
-        <span>Wallet <code className="text-slate-300">{short(address)}</code></span>
-        <button onClick={logout} className="text-xs text-slate-400 underline">log out</button>
+    <>
+      <Hero
+        tone={phase}
+        eyebrow={phase === 'settled' ? 'Violation resolved' : phase === 'locked' ? 'Rent protected' : 'Ready to protect'}
+        amount={heroAmount}
+        caption={
+          phase === 'settled'
+            ? 'The violation closed on-chain. The yield you earned is ready to claim.'
+            : phase === 'locked'
+              ? `Locked in escrow, earning yield until HPD resolves violation #${esc!.violationId.toString()}.`
+              : 'Create your escrow, then fund this month’s rent to lock it.'
+        }
+        yieldLabel={esc?.settled ? 'Your yield' : esc?.funded ? 'Yield so far' : undefined}
+        yieldValue={wd != null ? formatUsdc(wd) : '…'}
+      />
+
+      <ViolationCard violation={violation} />
+
+      <Card>
+        {/* state machine */}
+        {esc == null && (
+          <div className="space-y-3">
+            <label className="block text-sm font-medium">
+              HPD violation ID
+              <input
+                value={violationId}
+                onChange={(e) => setViolationId(e.target.value)}
+                inputMode="numeric"
+                placeholder="e.g. 18100032"
+                className={`mt-1.5 w-full rounded-xl border border-[#D7E0EC] bg-white px-4 py-3 text-base outline-none focus:border-[#1D4ED8] ${MONO}`}
+              />
+              <span className="mt-1.5 block text-xs text-[#5A6B85]">
+                The open violation on your apartment — the oracle watches this ID to release your rent.
+              </span>
+            </label>
+            {!DEMO_PARTIES_SET && (
+              <p className="text-xs text-[#B45309]">Demo landlord/contractor not configured (NEXT_PUBLIC_DEMO_LANDLORD / _CONTRACTOR).</p>
+            )}
+            <Button busy={busy} onClick={onCreate}>Create my rent escrow</Button>
+          </div>
+        )}
+
+        {esc && !esc.funded && role === 'tenant' && (
+          <Button busy={busy} onClick={onFund}>Fund this month’s rent — {DEMO.principal} USDC</Button>
+        )}
+
+        {esc && esc.funded && !esc.settled && (
+          <p className="text-center text-sm text-[#5A6B85]">
+            Nothing to do — your rent is safe. We’ll unlock it automatically when the violation closes.
+          </p>
+        )}
+
+        {esc && esc.settled && (
+          wd != null && wd > 0n
+            ? <Button busy={busy} onClick={onClaim}>Claim my yield — {formatUsdc(wd)}</Button>
+            : <p className="text-center text-sm text-[#5A6B85]">Resolved. Your principal returned to the landlord; no yield to claim.</p>
+        )}
+
+        {msg && <p className="mt-3 text-center text-xs text-[#5A6B85]">{msg}</p>}
+      </Card>
+
+      <WalletRow address={address} bal={bal} onLogout={logout} />
+    </>
+  )
+}
+
+/* ---------- presentational pieces ---------- */
+
+const TONES = {
+  protect: { bg: '#EEF2FD', ring: '#C7D2FE', accent: '#1D4ED8' },
+  locked: { bg: '#FFF7ED', ring: '#FED7AA', accent: '#B45309' },
+  settled: { bg: '#ECFDF5', ring: '#A7F3D0', accent: '#047857' },
+} as const
+
+export function Hero({
+  tone, eyebrow, amount, caption, yieldLabel, yieldValue,
+}: {
+  tone: keyof typeof TONES
+  eyebrow: string
+  amount: string
+  caption: string
+  yieldLabel?: string
+  yieldValue?: string
+}) {
+  const t = TONES[tone]
+  return (
+    <section
+      className="rounded-3xl border p-6 shadow-sm"
+      style={{ backgroundColor: t.bg, borderColor: t.ring }}
+    >
+      <div className="flex items-center gap-2">
+        <Shield tone={t.accent} size={18} />
+        <span className="text-xs font-semibold uppercase tracking-[0.14em]" style={{ color: t.accent }}>{eyebrow}</span>
       </div>
-      <p className="text-sm">USDC (gas + rent): <b>{bal != null ? formatUsdc(bal) : '…'}</b></p>
-
-      {bal === 0n && address && (
-        <div className="rounded-md bg-amber-500/10 p-3 text-xs text-amber-300">
-          Your wallet has no USDC. On Arc, USDC is also the gas token — fund this address before transacting:
-          <br /><code className="break-all">{address}</code>
-          <br /><a className="underline" href={FAUCET} target="_blank" rel="noreferrer">Open Circle faucet ↗</a>
+      <div className={`mt-3 flex items-baseline gap-2 ${DISPLAY}`}>
+        <span className="text-5xl font-bold leading-none tracking-tight text-[#0E1A33]">{amount}</span>
+        <span className="text-xl font-semibold" style={{ color: t.accent }}>USDC</span>
+        <span className="text-sm font-medium text-[#5A6B85]">/ month</span>
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-[#445166]">{caption}</p>
+      {yieldLabel && (
+        <div className="mt-4 flex items-center justify-between rounded-2xl bg-white/70 px-4 py-3">
+          <span className="text-xs font-medium text-[#5A6B85]">{yieldLabel}</span>
+          <span className={`text-base font-semibold ${DISPLAY}`} style={{ color: TONES.settled.accent }}>{yieldValue}</span>
         </div>
       )}
+    </section>
+  )
+}
 
-      {!DEMO_PARTIES_SET && esc == null && (
-        <p className="text-xs text-amber-300">
-          Demo landlord/contractor not configured (set NEXT_PUBLIC_DEMO_LANDLORD / _CONTRACTOR).
-        </p>
-      )}
-
-      {esc == null && (
-        <div className="space-y-2">
-          <label className="block text-sm text-slate-300">
-            HPD violation ID
-            <input
-              value={violationId}
-              onChange={(e) => setViolationId(e.target.value)}
-              inputMode="numeric"
-              placeholder="e.g. 18100032"
-              className="mt-1 w-full rounded-md bg-slate-800 px-3 py-2 text-base"
-            />
-            <span className="mt-1 block text-xs text-slate-500">
-              The open violation on your apartment — the oracle watches this ID to release your rent.
-            </span>
-          </label>
-          <Action busy={busy} onClick={onCreate}>Create my rent escrow</Action>
+export function ViolationCard({ violation }: { violation: Violation | null }) {
+  return (
+    <Card>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#5A6B85]">HPD violation</h2>
+        {violation && <StatusPill status={violation.status} />}
+      </div>
+      {violation ? (
+        <div className="mt-2">
+          <p className="font-medium">{violation.address}</p>
+          <p className="text-sm text-[#5A6B85]">{violation.description}</p>
+          <p className={`mt-2 text-xs text-[#8190A6] ${MONO}`}>#{violation.violationId}{violation.date ? ` · ${violation.date}` : ''}</p>
         </div>
+      ) : (
+        <p className="mt-2 text-sm text-[#5A6B85]">No violation on file yet.</p>
       )}
-
-      {esc && !esc.funded && role === 'tenant' && (
-        <Action busy={busy} onClick={onFund}>Fund rent — {DEMO.principal} USDC</Action>
-      )}
-
-      {esc && esc.funded && !esc.settled && (
-        <div className="rounded-md bg-slate-800/60 p-3 text-sm">
-          <p>🔒 Rent locked: <b>{formatUsdc(esc.principal)}</b></p>
-          <p className="text-slate-400">Status: {esc.statusName} — earning yield until HPD resolves the violation.</p>
-        </div>
-      )}
-
-      {esc && esc.settled && (
-        <div className="space-y-2 rounded-md bg-emerald-500/10 p-3 text-sm">
-          <p>✅ Resolved: <b>{esc.statusName}</b></p>
-          <p>Yield accrued to you: <b>{wd != null ? formatUsdc(wd) : '…'}</b></p>
-          {wd != null && wd > 0n && <Action busy={busy} onClick={onClaim}>Claim my yield</Action>}
-        </div>
-      )}
-
-      {msg && <p className="text-xs text-slate-400">{msg}</p>}
     </Card>
   )
 }
 
-function Card({ children }: { children: React.ReactNode }) {
-  return <section className="space-y-3 rounded-lg border border-slate-800 p-4">{children}</section>
+function StatusPill({ status }: { status: string }) {
+  const open = status === 'Open'
+  const c = open ? TONES.locked : TONES.settled
+  return (
+    <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor: c.bg, color: c.accent }}>
+      {open ? 'Open' : status}
+    </span>
+  )
 }
 
-function Action({ children, onClick, busy }: { children: React.ReactNode; onClick: () => void; busy: boolean }) {
+function WalletRow({ address, bal, onLogout }: { address?: string; bal: bigint | null; onLogout: () => void }) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between rounded-2xl border border-[#D7E0EC] bg-white px-4 py-3 text-sm">
+        <div>
+          <span className={`text-[#0E1A33] ${MONO}`}>{short(address)}</span>
+          <span className="ml-2 text-[#5A6B85]">{bal != null ? formatUsdc(bal) : '…'}</span>
+        </div>
+        <button onClick={onLogout} className="text-xs text-[#5A6B85] underline">Log out</button>
+      </div>
+      {bal === 0n && address && (
+        <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF7ED] p-3 text-xs text-[#B45309]">
+          Your wallet needs USDC — on Arc it pays gas too. Send some to
+          <span className={`mt-0.5 block break-all ${MONO}`}>{address}</span>
+          <a className="mt-1 inline-block font-semibold underline" href={FAUCET} target="_blank" rel="noreferrer">Open the Circle faucet →</a>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function Card({ children }: { children: React.ReactNode }) {
+  return <section className="rounded-2xl border border-[#D7E0EC] bg-white p-5 shadow-sm">{children}</section>
+}
+
+export function Button({ children, onClick, busy }: { children: React.ReactNode; onClick: () => void; busy: boolean }) {
   return (
     <button
       disabled={busy}
       onClick={onClick}
-      className="w-full rounded-lg bg-indigo-600 px-4 py-3 font-semibold hover:bg-indigo-500 disabled:opacity-50"
+      className="w-full rounded-xl bg-[#1D4ED8] px-4 py-3.5 text-base font-semibold text-white transition active:scale-[0.99] hover:bg-[#1A44BE] disabled:opacity-50"
     >
       {children}
     </button>
+  )
+}
+
+function Shield({ tone, size }: { tone: string; size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 2.5 19.5 5v6c0 4.5-3.1 8.3-7.5 10C7.6 19.3 4.5 15.5 4.5 11V5L12 2.5Z" fill={tone} fillOpacity="0.14" stroke={tone} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M9.2 12.2l2 2 3.6-4" stroke={tone} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }
