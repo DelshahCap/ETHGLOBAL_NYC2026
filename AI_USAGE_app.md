@@ -32,3 +32,21 @@ live in [`docs/app/`](docs/app/).
   tester, live event log, minimal Privy panel), the read-only tenant view, a PWA shell,
   and Vitest + Playwright smoke tests.
 - **Files touched:** everything under `app/`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Subagent-driven execution, review & merge to main
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Executed the plan (`docs/app/2026-06-14-app-admin-panel-plan.md`) via
+  subagent-driven development — a fresh implementer subagent per task, each followed
+  by a two-stage review (spec compliance, then code quality) before the change was
+  committed. The reviews caught and fixed real issues rather than rubber-stamping:
+  the `.env.local.example` `.gitignore` trap (file could never be committed), a
+  wrong-status write in `/api/tx/[action]` (now validates status is 0–2), the Privy
+  v3 nested `embeddedWallets` API change, a no-`PrivyProvider` crash when Privy is
+  disabled (fixed via an outer/inner component split), and an ambiguous Playwright
+  selector. Also bumped the tsconfig target to ES2020 (BigInt literals) and wrote an
+  admin-panel usage/test guide. Final whole-implementation review passed; verification
+  sweep green (typecheck, 6 Vitest tests, production build, Playwright smoke 2/2).
+- **Merged:** `feat/app-admin-panel` → `main` (merge commit `12bc864`), bringing the
+  frontend slice in alongside Don's Chainlink CRE oracle track.
+- **Files touched:** everything under `app/`, `docs/app/admin-test-panel-guide.md`,
+  `AI_USAGE_app.md`.
