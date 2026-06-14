@@ -171,3 +171,15 @@ artifacts that directed the AI live in [specs/](specs/).
   `bun test` 7/7 green. No status guessed.
 - **Files touched:** `cre-workflow/hpd-oracle/mapStatus.test.ts`,
   `test/fixtures/hpd-4-6-manhattan.json`.
+
+### 2026-06-14 — End-to-end HPD→CRE→EscrowVault simulation
+- **Directed by:** Don (created+funded escrow 1 with the keystore himself; AI ran the
+  simulation and verification).
+- **What:** Pointed `config.json` at escrow id 1 / violationId 18100032, ran
+  `cre workflow simulate hpd-oracle --target staging-settings --broadcast`. The workflow
+  fetched the live HPD status (Closed/1), reported it through the Arc MockForwarder to the
+  receiver, and `EscrowVault` settled escrow 1. AI verified ON-CHAIN (cast, not the log):
+  `escrows(1).settled==true`, `status==1`, withdrawable 300000/700000/0 for
+  contractor/landlord/tenant — matching the Closed split. Recorded real tx hashes + reads
+  in `specs/cre-oracle.md` "Simulation results". Nothing fabricated.
+- **Files touched:** `specs/cre-oracle.md`, `cre-workflow/hpd-oracle/config.json`.

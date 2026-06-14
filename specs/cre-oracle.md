@@ -254,6 +254,55 @@ per environment pointing at the matching forwarder.
   values are a hard contract between workflow and receiver; changing the enum requires
   changing both.
 
+## Simulation results
+
+End-to-end run on Arc testnet (2026-06-14): live HPD status → CRE workflow → MockForwarder
+→ `EscrowVaultReceiver` → `EscrowVault.updateStatus` → settlement. Every value below is a
+real on-chain read or a real simulation log line — nothing reconstructed.
+
+**Subject.** `violationId 18100032` (4-6 Manhattan Ave). Re-queried live before the run:
+`violationstatus "Close"`, `currentstatus "VIOLATION CLOSED"` → `mapStatus` = `Closed` (1).
+
+**Escrow** (id `1`, created+funded on Arc beforehand):
+- tenant `0x1111…1111`, landlord `0x2222…2222`, contractor `0x3333…3333`
+- principal `1000000` (1 USDC), contractorFee `300000` (0.3 USDC)
+- yield source pool clean at run time (share price 1.0), so expected yield = 0
+
+**Command** (run from `cre-workflow/`):
+`cre workflow simulate hpd-oracle --target staging-settings --broadcast`
+
+**Simulation log highlights:**
+```
+✓ Workflow compiled
+2026-06-14T... [USER LOG] escrow 1 (violation 18100032) -> status 1
+2026-06-14T... [USER LOG] posted status 1 for escrow 1
+✓ Workflow Simulation Result: "done: posted 1/1 status update(s)"
+```
+
+**Transactions:**
+| Step | Tx hash | Block |
+|------|---------|-------|
+| createEscrow(…, 18100032, fee) | `0x54da4bd2c65a33d2c7e5cd1f33b6713ef16a59cacc795d9a5c6370c78bea2834` | 46984162 |
+| fund(1, 1000000) | `0xdfbfa7ec0fea3a60e0f6dfa6fa87c7bf5347c621f7c1ee1006d91d065599296c` | 46984591 |
+| writeReport → MockForwarder → settle | `0xb1e32c18056744a838035fc87eb06b0894d90140f2929f916815faa1d43ed867` | 46985535 |
+
+The writeReport tx (`to` = Arc MockForwarder `0x6E9E…eDc1`, status success) emitted, in one
+tx: USDC redeem from the yield source to the vault, the vault's `Settled(id=1, Closed)`, and
+the receiver's `StatusReported(id=1, 1)` — the full chain executed end to end.
+
+**On-chain verification after the run** (read via `cast`, not from the log):
+```
+escrows(1).status   == 1   (Closed)   ✅
+escrows(1).funded   == true            ✅
+escrows(1).settled  == true            ✅
+withdrawable(0x3333… contractor) == 300000   (= contractorFee)        ✅
+withdrawable(0x2222… landlord)   == 700000   (= principal - fee)      ✅
+withdrawable(0x1111… tenant)     == 0        (= yield, clean pool)    ✅
+```
+
+This matches `EscrowVault`'s Closed branch exactly (contractor = fee, landlord =
+principal − fee, tenant = accrued yield). The oracle path is proven against real HPD data.
+
 ## Open questions / to confirm
 - Exact CRE SDK symbols (`runtime.report`, `evmClient.writeReport`, `ReceiverTemplate`
   import path) against the pinned SDK version — names here are per the integration brief
