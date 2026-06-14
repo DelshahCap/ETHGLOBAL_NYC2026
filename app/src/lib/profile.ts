@@ -24,7 +24,7 @@ export function isUserRole(x: unknown): x is UserRole {
   return typeof x === 'string' && (USER_ROLES as string[]).includes(x)
 }
 
-export type Profile = { userId: string; role: UserRole; email?: string }
+export type Profile = { userId: string; role: UserRole; email?: string; wallet?: string }
 
 /* ---------- client helpers (talk to /api/profile) ---------- */
 
@@ -34,6 +34,13 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
   const r = await fetch(`/api/profile?userId=${encodeURIComponent(userId)}`)
   if (!r.ok) return null
   return (await r.json()) as Profile | null
+}
+
+// Admin view: every profile that has signed up (newest registrations included).
+export async function fetchAllProfiles(): Promise<Profile[]> {
+  const r = await fetch('/api/profile?all=1')
+  if (!r.ok) return []
+  return (await r.json()) as Profile[]
 }
 
 export async function saveProfile(p: Profile): Promise<Profile> {

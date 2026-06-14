@@ -7,6 +7,7 @@ import { ViolationEditor } from './components/ViolationEditor'
 import { FunctionTester } from './components/FunctionTester'
 import { EventLog } from './components/EventLog'
 import { PrivyPanel } from './components/PrivyPanel'
+import { UsersPanel } from './components/UsersPanel'
 
 export default function AdminPage() {
   const [roles, setRoles] = useState<Roles | null>(null)
@@ -16,6 +17,7 @@ export default function AdminPage() {
       <h1 className="text-xl font-bold">Admin / Test Panel</h1>
       <StatusBar />
       <RolePanel roles={roles} />
+      <UsersPanel />
       <PrivyPanel />
       <LifecycleRunner roles={roles} />
       <ViolationEditor />

@@ -89,3 +89,19 @@ live in [`docs/app/`](docs/app/).
 - **Files touched:** `app/src/app/components/PartyDashboard.tsx`,
   `app/src/app/landlord/page.tsx`, `app/src/app/contractor/page.tsx`,
   `app/src/app/components/TenantAuth.tsx`, `app/src/app/page.tsx`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Admin users list + profile persistence diagnosis
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Nilesh reported a returning email re-asked the role. Diagnosed (not a
+  lookup bug): profiles are keyed by stable Privy DID, but `getKv()` falls back to an
+  in-memory Map when `KV_REST_API_*` is unset, which on Vercel serverless is
+  per-invocation/ephemeral — the POST saved, but later GETs (and the redeploy) saw an
+  empty store. Fix is two-part: provision Vercel KV (infra, Nilesh's side) + add a
+  durable user index. Implemented the index: `setProfile` now also maintains a
+  `profile:index` list and records the embedded wallet address; added `listProfiles()`
+  and `/api/profile?all=1`; built an admin **Users** panel (email, role, wallet, Privy
+  id) with a refresh + an empty-state hint pointing at KV config. Typecheck + build green.
+- **Files touched:** `app/src/lib/profile.ts`, `app/src/lib/server/profiles.ts`,
+  `app/src/app/api/profile/route.ts`, `app/src/app/components/TenantAuth.tsx`,
+  `app/src/app/admin/components/UsersPanel.tsx`, `app/src/app/admin/page.tsx`,
+  `AI_USAGE_app.md`.

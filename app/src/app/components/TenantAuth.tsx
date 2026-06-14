@@ -63,7 +63,7 @@ export function TenantAuth() {
     if (!user) return
     setBusy(true); setErr('')
     try {
-      const saved = await saveProfile({ userId: user.id, role, email })
+      const saved = await saveProfile({ userId: user.id, role, email, wallet: user.wallet?.address })
       setProfile(saved); setNeedRole(false)
       router.push(ROUTE_FOR[role])
     } catch (e) {
