@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { StatusBar } from './components/StatusBar'
 import { RolePanel, type Roles } from './components/RolePanel'
 import { LifecycleRunner } from './components/LifecycleRunner'
+import { ViolationEditor } from './components/ViolationEditor'
 
 export default function AdminPage() {
   const [roles, setRoles] = useState<Roles | null>(null)
@@ -13,6 +14,7 @@ export default function AdminPage() {
       <StatusBar />
       <RolePanel roles={roles} />
       <LifecycleRunner roles={roles} />
+      <ViolationEditor />
     </main>
   )
 }
