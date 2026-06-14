@@ -303,11 +303,20 @@ withdrawable(0x1111… tenant)     == 0        (= yield, clean pool)    ✅
 This matches `EscrowVault`'s Closed branch exactly (contractor = fee, landlord =
 principal − fee, tenant = accrued yield). The oracle path is proven against real HPD data.
 
-## Open questions / to confirm
-- Exact CRE SDK symbols (`runtime.report`, `evmClient.writeReport`, `ReceiverTemplate`
-  import path) against the pinned SDK version — names here are per the integration brief
-  and should be pinned before coding.
-- Whether Arc exposes canonical MockForwarder/KeystoneForwarder addresses or we deploy
-  them; record both in `deployments/arc-testnet.md` once known.
-- Socrata field stability: confirm `violationstatus`/`currentstatus` are the right
-  columns for the dismissal-vs-cure distinction on current `wvxf-dwi5` rows.
+## Resolved (initially open questions)
+- **CRE SDK symbols** — pinned to `@chainlink/cre-sdk@1.11.0` and verified against the
+  installed type defs (`runtime.report`, `EVMClient.writeReport`, `getNetwork`,
+  `runtime.getSecret`, `ReceiverTemplate`). `main.ts` type-checks and the workflow ran
+  end to end (see Simulation results).
+- **Arc forwarders** — Arc exposes canonical addresses: MockKeystoneForwarder
+  `0x6E9E…eDc1` (sim) and KeystoneForwarder `0x76c9…5E62` (prod). Both recorded in
+  `deployments/arc-testnet.md`; the sim forwarder is the one the receiver was deployed
+  with and is proven in the end-to-end run.
+- **Socrata fields** — `violationstatus`/`currentstatus` confirmed as the right columns
+  against live `wvxf-dwi5` rows (29 terminal + 16 open at 4-6 Manhattan Ave); the
+  dismissal-vs-cure distinction is covered by `mapStatus` tests
+  (`cre-workflow/hpd-oracle/mapStatus.test.ts`).
+
+## Still open
+- Production `KeystoneForwarder` path (real DON signatures) is not yet exercised — only
+  the simulation MockForwarder has been run end to end.
