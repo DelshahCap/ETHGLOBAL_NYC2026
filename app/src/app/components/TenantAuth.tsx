@@ -38,7 +38,13 @@ export function TenantAuth() {
 
   const { login } = useLogin({
     onComplete: ({ user }) => { void resolveProfile(user.id) },
-    onError: (e) => setErr(typeof e === 'string' ? e : 'Login failed — please try again'),
+    onError: (e) => {
+      // Privy reports a closed/cancelled modal as an error code (e.g.
+      // 'exited_auth_flow'). That's normal user action, not a failure — ignore it.
+      const code = typeof e === 'string' ? e : ''
+      if (code.includes('exited') || code.includes('cancel')) { setErr(''); return }
+      setErr(code || 'Login failed — please try again')
+    },
   })
 
   useEffect(() => {
