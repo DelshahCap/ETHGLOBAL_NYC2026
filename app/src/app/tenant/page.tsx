@@ -60,6 +60,7 @@ function TenantPortal() {
   const [wd, setWd] = useState<bigint | null>(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
+  const [violationId, setViolationId] = useState(DEMO.violationId)
 
   const refresh = useCallback(async () => {
     if (!address) return
@@ -96,12 +97,13 @@ function TenantPortal() {
 
   const onCreate = run('Create escrow', async () => {
     if (!address) throw new Error('No wallet connected')
+    if (!/^\d+$/.test(violationId.trim())) throw new Error('Enter a numeric HPD violation ID')
     const w = await getWriteWallet()
     await createEscrow(w, {
       tenant: address,
       landlord: DEMO.landlord,
       contractor: DEMO.contractor,
-      violationId: DEMO.violationId,
+      violationId: violationId.trim(),
       contractorFee: toMicro(DEMO.contractorFee),
     })
   })
@@ -150,7 +152,24 @@ function TenantPortal() {
         </p>
       )}
 
-      {esc == null && <Action busy={busy} onClick={onCreate}>Create my rent escrow</Action>}
+      {esc == null && (
+        <div className="space-y-2">
+          <label className="block text-sm text-slate-300">
+            HPD violation ID
+            <input
+              value={violationId}
+              onChange={(e) => setViolationId(e.target.value)}
+              inputMode="numeric"
+              placeholder="e.g. 18100032"
+              className="mt-1 w-full rounded-md bg-slate-800 px-3 py-2 text-base"
+            />
+            <span className="mt-1 block text-xs text-slate-500">
+              The open violation on your apartment — the oracle watches this ID to release your rent.
+            </span>
+          </label>
+          <Action busy={busy} onClick={onCreate}>Create my rent escrow</Action>
+        </div>
+      )}
 
       {esc && !esc.funded && role === 'tenant' && (
         <Action busy={busy} onClick={onFund}>Fund rent — {DEMO.principal} USDC</Action>

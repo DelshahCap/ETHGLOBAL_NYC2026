@@ -4,7 +4,8 @@
 const ZERO = '0x0000000000000000000000000000000000000000' as const
 
 export const DEMO = {
-  // HPD ViolationID the escrow tracks (coordinate with the oracle backend).
+  // Default prefill for the tenant's violationId input. The tenant enters the real
+  // HPD ViolationID to start the process; the CRE watches by that violationId.
   violationId: process.env.NEXT_PUBLIC_DEMO_VIOLATION_ID ?? '18100032',
   // The other two parties' wallet addresses (their desktop Privy wallets).
   landlord: (process.env.NEXT_PUBLIC_DEMO_LANDLORD ?? ZERO) as `0x${string}`,
