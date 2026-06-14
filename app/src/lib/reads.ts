@@ -83,6 +83,29 @@ export async function readWithdrawable(account: `0x${string}`) {
   })
 }
 
+export type Party = 'tenant' | 'landlord' | 'contractor'
+
+// Detect-wallet-match-to-escrow: scan escrows newest-first and return the most
+// recent one this address participates in, plus which party it is. Demo-scale
+// (a handful of escrows); fine to scan linearly.
+export async function findEscrowFor(
+  account: `0x${string}`,
+): Promise<{ escrow: EscrowView; role: Party } | null> {
+  const nextId = await publicClient.readContract({
+    address: VAULT,
+    abi: escrowVaultAbi,
+    functionName: 'nextEscrowId',
+  })
+  const a = account.toLowerCase()
+  for (let i = Number(nextId) - 1; i >= 0; i--) {
+    const e = await readEscrow(i)
+    if (e.tenant.toLowerCase() === a) return { escrow: e, role: 'tenant' }
+    if (e.landlord.toLowerCase() === a) return { escrow: e, role: 'landlord' }
+    if (e.contractor.toLowerCase() === a) return { escrow: e, role: 'contractor' }
+  }
+  return null
+}
+
 export async function readUsdcBalance(account: `0x${string}`) {
   return publicClient.readContract({
     address: USDC,
