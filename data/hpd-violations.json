@@ -1,0 +1,271 @@
+{
+  "source": "NYC HPD Housing Maintenance Code Violations (wvxf-dwi5)",
+  "note": "Each record simulates the SAME violation in two states. 'open' and 'closed' hold the HPD violation number for that state.",
+  "classLegend": {
+    "A": "Non-hazardous",
+    "B": "Hazardous",
+    "C": "Immediately hazardous"
+  },
+  "violations": [
+    {
+      "row": 1,
+      "open": { "status": "open", "violationId": "18940160" },
+      "closed": { "status": "closed", "violationId": "18427253" },
+      "class": "C",
+      "apartment": null,
+      "reportedDate": "2026-05-12",
+      "code": "§27-2005/2007/2041.1 HMC + MDL",
+      "description": "Fire safety / multi-code"
+    },
+    {
+      "row": 2,
+      "open": { "status": "open", "violationId": "18940174" },
+      "closed": { "status": "closed", "violationId": "18427251" },
+      "class": "C",
+      "apartment": null,
+      "reportedDate": "2026-05-12",
+      "code": "§27-2005",
+      "description": "Repair broken/defective item"
+    },
+    {
+      "row": 3,
+      "open": { "status": "open", "violationId": "18940164" },
+      "closed": { "status": "closed", "violationId": "18100032" },
+      "class": "B",
+      "apartment": null,
+      "reportedDate": "2026-05-12",
+      "code": "§27-2005",
+      "description": "Operable handle on fire exit door"
+    },
+    {
+      "row": 4,
+      "open": { "status": "open", "violationId": "18940169" },
+      "closed": { "status": "closed", "violationId": "17953722" },
+      "class": "C",
+      "apartment": null,
+      "reportedDate": "2026-05-12",
+      "code": "§27-2005",
+      "description": "Repair broken/defective item"
+    },
+    {
+      "row": 5,
+      "open": { "status": "open", "violationId": "18908640" },
+      "closed": { "status": "closed", "violationId": "17781310" },
+      "class": "A",
+      "apartment": null,
+      "reportedDate": "2026-05-05",
+      "code": "§27-2104(B)",
+      "description": "Post rent stabilization notice"
+    },
+    {
+      "row": 6,
+      "open": { "status": "open", "violationId": "18796792" },
+      "closed": { "status": "closed", "violationId": "17781313" },
+      "class": "C",
+      "apartment": null,
+      "reportedDate": "2026-04-16",
+      "code": "§27-2005/2007/2041.1 HMC + MDL",
+      "description": "Fire safety / multi-code"
+    },
+    {
+      "row": 7,
+      "open": { "status": "open", "violationId": "18806241" },
+      "closed": { "status": "closed", "violationId": "17751396" },
+      "class": "B",
+      "apartment": null,
+      "reportedDate": "2026-04-16",
+      "code": "§27-2005",
+      "description": "Repair/replace door latch set"
+    },
+    {
+      "row": 8,
+      "open": { "status": "open", "violationId": "18785467" },
+      "closed": { "status": "closed", "violationId": "17574254" },
+      "class": "A",
+      "apartment": "4A",
+      "reportedDate": "2026-04-08",
+      "code": "§27-2005",
+      "description": "Repair/replace rubber gasket"
+    },
+    {
+      "row": 9,
+      "open": { "status": "open", "violationId": "18785445" },
+      "closed": { "status": "closed", "violationId": "17574255" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2026-04-08",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 10,
+      "open": { "status": "open", "violationId": "18785475" },
+      "closed": { "status": "closed", "violationId": "17574256" },
+      "class": "A",
+      "apartment": "4A",
+      "reportedDate": "2026-04-08",
+      "code": "§27-2005",
+      "description": "Repair broken/defective item"
+    },
+    {
+      "row": 11,
+      "open": { "status": "open", "violationId": "18785455" },
+      "closed": { "status": "closed", "violationId": "17070856" },
+      "class": "B",
+      "apartment": "4A",
+      "reportedDate": "2026-04-08",
+      "code": "§27-2026",
+      "description": "Repair drain at washbasin"
+    },
+    {
+      "row": 12,
+      "open": { "status": "open", "violationId": "18785469" },
+      "closed": { "status": "closed", "violationId": "17070835" },
+      "class": "A",
+      "apartment": "4A",
+      "reportedDate": "2026-04-08",
+      "code": "§27-2005",
+      "description": "Repair/replace hanging light"
+    },
+    {
+      "row": 13,
+      "open": { "status": "open", "violationId": "18791816" },
+      "closed": { "status": "closed", "violationId": "17065236" },
+      "class": "A",
+      "apartment": "4A",
+      "reportedDate": "2026-04-08",
+      "code": "§27-2005",
+      "description": "Repair/replace lower sash"
+    },
+    {
+      "row": 14,
+      "open": { "status": "open", "violationId": "17781316" },
+      "closed": { "status": "closed", "violationId": "16941621" },
+      "class": "C",
+      "apartment": "3C",
+      "reportedDate": "2025-03-24",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 15,
+      "open": { "status": "open", "violationId": "17751388" },
+      "closed": { "status": "closed", "violationId": "16538510" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2025-03-05",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 16,
+      "open": { "status": "open", "violationId": "17574257" },
+      "closed": { "status": "closed", "violationId": "16498722" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2024-12-22",
+      "code": "§27-2017.4",
+      "description": "Roaches infestation"
+    },
+    {
+      "row": 17,
+      "open": { "status": "open", "violationId": "17574258" },
+      "closed": { "status": "closed", "violationId": "16498721" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2024-12-22",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 18,
+      "open": { "status": "open", "violationId": "17065235" },
+      "closed": { "status": "closed", "violationId": "16457484" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2024-06-16",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 19,
+      "open": { "status": "open", "violationId": "17015643" },
+      "closed": { "status": "closed", "violationId": "16457483" },
+      "class": "C",
+      "apartment": "3B",
+      "reportedDate": "2024-06-01",
+      "code": "§27-2017.4",
+      "description": "Roaches infestation"
+    },
+    {
+      "row": 20,
+      "open": { "status": "open", "violationId": "17015642" },
+      "closed": { "status": "closed", "violationId": "16457480" },
+      "class": "C",
+      "apartment": "3B",
+      "reportedDate": "2024-06-01",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 21,
+      "open": { "status": "open", "violationId": "16941620" },
+      "closed": { "status": "closed", "violationId": "16416800" },
+      "class": "C",
+      "apartment": "4C",
+      "reportedDate": "2024-04-30",
+      "code": "§27-2017.4",
+      "description": "Roaches infestation"
+    },
+    {
+      "row": 22,
+      "open": { "status": "open", "violationId": "16630181" },
+      "closed": { "status": "closed", "violationId": "14523671" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2024-01-24",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 23,
+      "open": { "status": "open", "violationId": "16538509" },
+      "closed": { "status": "closed", "violationId": "13992452" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2023-12-18",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 24,
+      "open": { "status": "open", "violationId": "16826253" },
+      "closed": { "status": "closed", "violationId": "13992455" },
+      "class": "B",
+      "apartment": "1A",
+      "reportedDate": "2023-12-04",
+      "code": "§27-2017.3",
+      "description": "Trace/repair source, abate mold"
+    },
+    {
+      "row": 25,
+      "open": { "status": "open", "violationId": "15713567" },
+      "closed": { "status": "closed", "violationId": "13992454" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2023-02-06",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    },
+    {
+      "row": 26,
+      "open": { "status": "open", "violationId": "14523674" },
+      "closed": { "status": "closed", "violationId": "13992453" },
+      "class": "C",
+      "apartment": "4A",
+      "reportedDate": "2021-08-25",
+      "code": "§27-2017.4",
+      "description": "Mice infestation"
+    }
+  ]
+}
