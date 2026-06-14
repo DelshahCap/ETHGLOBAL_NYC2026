@@ -7,6 +7,7 @@ import { readUsdcBalance, readWithdrawable, findEscrowFor, type EscrowView, type
 import { toMicro, formatUsdc } from '@/lib/usdc'
 import { DEMO, DEMO_PARTIES_SET } from '@/lib/demo'
 import { FAUCET } from '@/lib/chain'
+import { AddFundsButton } from '@/app/components/AddFundsButton'
 // `import type` is erased at build, so the `server-only` guard in store.ts never
 // reaches this client bundle. Keep it type-only — a value import here would break the build.
 import type { Violation } from '@/lib/server/store'
@@ -203,7 +204,7 @@ function Portal({ violation }: { violation: Violation | null }) {
         {msg && <p className="mt-3 text-center text-xs text-[#5A6B85]">{msg}</p>}
       </Card>
 
-      <WalletRow address={address} bal={bal} onLogout={logout} />
+      <WalletRow address={address} bal={bal} onLogout={logout} onFunded={refresh} />
     </>
   )
 }
@@ -282,21 +283,25 @@ function StatusPill({ status }: { status: string }) {
   )
 }
 
-function WalletRow({ address, bal, onLogout }: { address?: string; bal: bigint | null; onLogout: () => void }) {
+function WalletRow({ address, bal, onLogout, onFunded }: { address?: string; bal: bigint | null; onLogout: () => void; onFunded?: () => void }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between rounded-2xl border border-[#D7E0EC] bg-white px-4 py-3 text-sm">
-        <div>
-          <span className={`text-[#0E1A33] ${MONO}`}>{short(address)}</span>
-          <span className="ml-2 text-[#5A6B85]">{bal != null ? formatUsdc(bal) : '…'}</span>
+      <div className="rounded-2xl border border-[#D7E0EC] bg-white px-4 py-3 text-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className={`text-[#0E1A33] ${MONO}`}>{short(address)}</span>
+            <span className="ml-2 text-[#5A6B85]">{bal != null ? formatUsdc(bal) : '…'}</span>
+          </div>
+          <button onClick={onLogout} className="text-xs text-[#5A6B85] underline">Log out</button>
         </div>
-        <button onClick={onLogout} className="text-xs text-[#5A6B85] underline">Log out</button>
+        <div className="mt-2 flex items-center justify-between">
+          <AddFundsButton to={address} onFunded={onFunded} />
+          <a className="text-xs text-[#5A6B85] underline" href={FAUCET} target="_blank" rel="noreferrer">Circle faucet ↗</a>
+        </div>
       </div>
       {bal === 0n && address && (
         <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF7ED] p-3 text-xs text-[#B45309]">
-          Your wallet needs USDC — on Arc it pays gas too. Send some to
-          <span className={`mt-0.5 block break-all ${MONO}`}>{address}</span>
-          <a className="mt-1 inline-block font-semibold underline" href={FAUCET} target="_blank" rel="noreferrer">Open the Circle faucet →</a>
+          Your wallet needs USDC to pay gas on Arc — tap “Add test USDC” above to get started.
         </div>
       )}
     </div>

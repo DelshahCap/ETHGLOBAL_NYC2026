@@ -119,3 +119,20 @@ live in [`docs/app/`](docs/app/).
   Typecheck, 9 unit tests, and production build all green.
 - **Files touched:** `app/src/lib/server/kv.ts`, `app/src/app/api/kv-status/route.ts`,
   `app/package.json`, `app/package-lock.json`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — In-app test-USDC faucet (funding as a workflow step)
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Made wallet funding a first-class step instead of a passive Circle-faucet
+  hint. Added a server-signed faucet: `/api/fund` transfers test USDC from a funded
+  `FAUCET_PRIVATE_KEY` account to the connected Privy wallet (USDC is gas on Arc),
+  capped at 25/req with graceful "not configured" when the key is absent. Built a
+  shared `AddFundsButton` ("Add 5 test USDC") wired into the tenant and
+  landlord/contractor wallet rows, refreshing the balance on success. Nilesh chose the
+  server-faucet approach over a guided Circle-faucet step, accepting a low-value funded
+  key in Vercel env (a deliberate exception to the "no server keys on Vercel" default,
+  scoped to a demo faucet). Documented `FAUCET_PRIVATE_KEY` in `.env.local.example`.
+  Typecheck, 9 unit tests, and production build green; `/api/fund` registers.
+- **Files touched:** `app/src/lib/server/keys.ts`, `app/src/lib/server/wallets.ts`,
+  `app/src/app/api/fund/route.ts`, `app/src/lib/faucet.ts`,
+  `app/src/app/components/AddFundsButton.tsx`, `app/src/app/tenant/page.tsx`,
+  `app/src/app/components/PartyDashboard.tsx`, `app/.env.local.example`, `AI_USAGE_app.md`.

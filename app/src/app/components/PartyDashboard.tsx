@@ -7,6 +7,7 @@ import { readUsdcBalance, readWithdrawable, findEscrowFor, type EscrowView, type
 import { formatUsdc } from '@/lib/usdc'
 import { FAUCET } from '@/lib/chain'
 import type { Violation } from '@/lib/server/store'
+import { AddFundsButton } from './AddFundsButton'
 
 // Desktop dashboard for the landlord and contractor. Both roles do the same
 // thing on-chain — watch the escrow and pull their share once it settles
@@ -135,7 +136,7 @@ export function PartyDashboard({ role }: { role: Role }) {
             {/* right: context */}
             <section className="md:col-span-2 space-y-5">
               <ViolationCard violation={violation} />
-              <WalletRow address={address} bal={bal} onLogout={logout} email={user?.email?.address} />
+              <WalletRow address={address} bal={bal} onLogout={logout} email={user?.email?.address} onFunded={refresh} />
             </section>
           </div>
         )}
@@ -195,7 +196,7 @@ function StatusPill({ status }: { status: string }) {
   )
 }
 
-function WalletRow({ address, bal, onLogout, email }: { address?: string; bal: bigint | null; onLogout: () => void; email?: string }) {
+function WalletRow({ address, bal, onLogout, email, onFunded }: { address?: string; bal: bigint | null; onLogout: () => void; email?: string; onFunded?: () => void }) {
   return (
     <div className="space-y-2">
       <div className="rounded-2xl border border-[#D7E0EC] bg-white px-4 py-3 text-sm">
@@ -207,11 +208,14 @@ function WalletRow({ address, bal, onLogout, email }: { address?: string; bal: b
           </div>
           <button onClick={onLogout} className="text-xs text-[#5A6B85] underline">Log out</button>
         </div>
+        <div className="mt-2 flex items-center justify-between">
+          <AddFundsButton to={address} onFunded={onFunded} />
+          <a className="text-xs text-[#5A6B85] underline" href={FAUCET} target="_blank" rel="noreferrer">Circle faucet ↗</a>
+        </div>
       </div>
       {bal === 0n && address && (
         <div className="rounded-2xl border border-[#FED7AA] bg-[#FFF7ED] p-3 text-xs text-[#B45309]">
-          Your wallet needs USDC for gas on Arc.
-          <a className="mt-1 inline-block font-semibold underline" href={FAUCET} target="_blank" rel="noreferrer">Open the Circle faucet →</a>
+          Your wallet needs USDC to pay gas on Arc — tap “Add test USDC” above.
         </div>
       )}
     </div>
