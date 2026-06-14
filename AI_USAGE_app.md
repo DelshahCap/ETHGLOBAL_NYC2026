@@ -136,3 +136,16 @@ live in [`docs/app/`](docs/app/).
   `app/src/app/api/fund/route.ts`, `app/src/lib/faucet.ts`,
   `app/src/app/components/AddFundsButton.tsx`, `app/src/app/tenant/page.tsx`,
   `app/src/app/components/PartyDashboard.tsx`, `app/.env.local.example`, `AI_USAGE_app.md`.
+
+### 2026-06-14 — Self-wiring escrow parties (dynamic landlord/contractor resolution)
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Removed the `NEXT_PUBLIC_DEMO_LANDLORD/_CONTRACTOR` requirement from the
+  tenant's create flow. Added `getParties()` (latest landlord + contractor sign-up with
+  a wallet, from the KV profile index) exposed via `/api/parties`, and a `fetchParties()`
+  client helper. The tenant view now polls for parties and names those real wallets when
+  creating the escrow — so once a landlord and contractor sign up, their `findEscrowFor`
+  lookups match automatically. The Create button is gated until both exist, with a clear
+  "waiting for a landlord and contractor to sign up" hint replacing the old env warning.
+  Typecheck, 9 unit tests, and production build green; `/api/parties` registers.
+- **Files touched:** `app/src/lib/server/profiles.ts`, `app/src/app/api/parties/route.ts`,
+  `app/src/lib/profile.ts`, `app/src/app/tenant/page.tsx`, `AI_USAGE_app.md`.

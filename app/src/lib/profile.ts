@@ -43,6 +43,16 @@ export async function fetchAllProfiles(): Promise<Profile[]> {
   return (await r.json()) as Profile[]
 }
 
+export type Parties = { landlord?: string; contractor?: string }
+
+// The landlord/contractor wallets the tenant's escrow should name, resolved from
+// real sign-ups (no NEXT_PUBLIC_DEMO_* env needed).
+export async function fetchParties(): Promise<Parties> {
+  const r = await fetch('/api/parties')
+  if (!r.ok) return {}
+  return (await r.json()) as Parties
+}
+
 export async function saveProfile(p: Profile): Promise<Profile> {
   const r = await fetch('/api/profile', {
     method: 'POST',

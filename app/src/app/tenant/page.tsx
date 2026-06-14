@@ -5,9 +5,10 @@ import { useEscrowWallet } from '@/lib/useEscrowWallet'
 import { createEscrow, fundEscrow, claim } from '@/lib/escrow-actions'
 import { readUsdcBalance, readWithdrawable, findEscrowFor, type EscrowView, type Party } from '@/lib/reads'
 import { toMicro, formatUsdc } from '@/lib/usdc'
-import { DEMO, DEMO_PARTIES_SET } from '@/lib/demo'
+import { DEMO } from '@/lib/demo'
 import { FAUCET } from '@/lib/chain'
 import { AddFundsButton } from '@/app/components/AddFundsButton'
+import { fetchParties, type Parties } from '@/lib/profile'
 // `import type` is erased at build, so the `server-only` guard in store.ts never
 // reaches this client bundle. Keep it type-only — a value import here would break the build.
 import type { Violation } from '@/lib/server/store'
@@ -61,6 +62,18 @@ function Portal({ violation }: { violation: Violation | null }) {
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [violationId, setViolationId] = useState(DEMO.violationId)
+  const [parties, setParties] = useState<Parties>({})
+  const partiesReady = !!(parties.landlord && parties.contractor)
+
+  // Resolve the landlord/contractor wallets from real sign-ups (poll so they
+  // appear once those parties register) instead of hardcoded env addresses.
+  useEffect(() => {
+    let on = true
+    const tick = () => fetchParties().then((p) => { if (on) setParties(p) }).catch(() => {})
+    tick()
+    const t = setInterval(tick, 5000)
+    return () => { on = false; clearInterval(t) }
+  }, [])
 
   const refresh = useCallback(async () => {
     if (!address) return
@@ -98,11 +111,14 @@ function Portal({ violation }: { violation: Violation | null }) {
   const onCreate = run('Creating escrow', async () => {
     if (!address) throw new Error('No wallet connected')
     if (!/^\d+$/.test(violationId.trim())) throw new Error('Enter a numeric HPD violation ID')
+    if (!parties.landlord || !parties.contractor) {
+      throw new Error('Waiting for a landlord and contractor to sign up')
+    }
     const w = await getWriteWallet()
     await createEscrow(w, {
       tenant: address,
-      landlord: DEMO.landlord,
-      contractor: DEMO.contractor,
+      landlord: parties.landlord as `0x${string}`,
+      contractor: parties.contractor as `0x${string}`,
       violationId: violationId.trim(),
       contractorFee: toMicro(DEMO.contractorFee),
     })
@@ -178,10 +194,12 @@ function Portal({ violation }: { violation: Violation | null }) {
                 The open violation on your apartment — the oracle watches this ID to release your rent.
               </span>
             </label>
-            {!DEMO_PARTIES_SET && (
-              <p className="text-xs text-[#B45309]">Demo landlord/contractor not configured (NEXT_PUBLIC_DEMO_LANDLORD / _CONTRACTOR).</p>
+            {!partiesReady && (
+              <p className="text-xs text-[#B45309]">
+                Waiting for a landlord and contractor to sign up — each needs an account before you can create the escrow.
+              </p>
             )}
-            <Button busy={busy} onClick={onCreate}>Create my rent escrow</Button>
+            <Button busy={busy || !partiesReady} onClick={onCreate}>Create my rent escrow</Button>
           </div>
         )}
 

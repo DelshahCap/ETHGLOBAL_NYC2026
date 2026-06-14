@@ -1,6 +1,6 @@
 import 'server-only'
 import { getKv } from './kv'
-import { isUserRole, type Profile } from '@/lib/profile'
+import { isUserRole, type Profile, type UserRole } from '@/lib/profile'
 
 // One KV record per Privy user id (a DID like did:privy:...). Uses the same
 // getKv() that backs violation/clock state, so it inherits the in-memory
@@ -43,4 +43,16 @@ export async function listProfiles(): Promise<Profile[]> {
   const idx = (await kv.get<string[]>(INDEX_KEY)) ?? []
   const rows = await Promise.all(idx.map((id) => kv.get<Profile>(keyFor(id))))
   return rows.filter((p): p is Profile => !!p)
+}
+
+// Resolves the escrow counterparties for the tenant's create flow from real
+// sign-ups: the most recent landlord and contractor (by index order) that have a
+// wallet. Lets the demo self-wire instead of relying on NEXT_PUBLIC_DEMO_* env.
+export async function getParties(): Promise<{ landlord?: string; contractor?: string }> {
+  const all = await listProfiles()
+  const latestWallet = (role: UserRole) => {
+    const matches = all.filter((p) => p.role === role && p.wallet)
+    return matches.length ? matches[matches.length - 1].wallet : undefined
+  }
+  return { landlord: latestWallet('landlord'), contractor: latestWallet('contractor') }
 }
