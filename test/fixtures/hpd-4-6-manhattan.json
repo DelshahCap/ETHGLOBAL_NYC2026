@@ -236,5 +236,137 @@
       "statusName": "Closed",
       "found": true
     }
+  ],
+  "openRowsNote": "Violations still Open in the live dataset for 4-6 Manhattan Ave (open in both Jan and May 2026 snapshots, plus newer ones) \u2014 the non-settling case for the CRE oracle. Statuses read live.",
+  "openRowsFetchedAtUtcDate": "2026-06-14",
+  "openRows": [
+    {
+      "violationId": "17781316",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "17751388",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "17574257",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "17574258",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "17065235",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "17015642",
+      "violationstatus": "Open",
+      "currentstatus": "NOT COMPLIED WITH",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "17015643",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "16941620",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "16630181",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "16538509",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "16826253",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "15713567",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "14523674",
+      "violationstatus": "Open",
+      "currentstatus": "DEFECT LETTER ISSUED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "18940160",
+      "violationstatus": "Open",
+      "currentstatus": "VIOLATION WILL BE REINSPECTED",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "18908640",
+      "violationstatus": "Open",
+      "currentstatus": "NOV SENT OUT",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    },
+    {
+      "violationId": "18796792",
+      "violationstatus": "Open",
+      "currentstatus": "FALSE CERTIFICATION",
+      "status": 0,
+      "statusName": "Open",
+      "found": true
+    }
   ]
 }

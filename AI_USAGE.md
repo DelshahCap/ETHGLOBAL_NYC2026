@@ -160,3 +160,14 @@ artifacts that directed the AI live in [specs/](specs/).
   cases. `bun test` 5/5 green. No status guessed — read from the live dataset.
 - **Files touched:** `cre-workflow/hpd-oracle/main.ts`,
   `cre-workflow/hpd-oracle/mapStatus.test.ts`, `test/fixtures/hpd-4-6-manhattan.json`.
+
+### 2026-06-14 — Real Open-violation cases in mapStatus tests
+- **Directed by:** Don
+- **What:** Fetched live `wvxf-dwi5` status for 16 still-open candidates at 4-6
+  Manhattan Ave — all 16 confirmed `violationstatus` "Open" (→ Status.Open/0), none
+  dropped. Appended them to the fixture under `openRows` (existing 29 terminal rows kept
+  under `rows`) and added tests asserting every real Open row maps to 0, proving the
+  non-settling branch against live data (synthetic Open + missing-data tests kept).
+  `bun test` 7/7 green. No status guessed.
+- **Files touched:** `cre-workflow/hpd-oracle/mapStatus.test.ts`,
+  `test/fixtures/hpd-4-6-manhattan.json`.

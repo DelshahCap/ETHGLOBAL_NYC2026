@@ -14,6 +14,7 @@ type Row = {
 }
 
 const rows = fixture.rows as Row[]
+const openRows = fixture.openRows as Row[]
 
 const byId = (id: string): Row => {
   const r = rows.find((x) => x.violationId === id)
@@ -52,8 +53,27 @@ describe("mapStatus against real HPD rows (4-6 Manhattan Ave)", () => {
     expect(mapStatus(socrata(r))).toBe(Status.Dismissed)
   })
 
-  // None of the 29 are still Open, so use a synthetic Open row to cover that branch.
-  test("Open row -> Status.Open (0)", () => {
+  // Real Open rows from the live dataset (violationstatus "Open") -> the non-settling case.
+  test("all real Open rows -> Status.Open (0)", () => {
+    expect(openRows.length).toBeGreaterThanOrEqual(3)
+    for (const r of openRows) {
+      expect(r.violationstatus).toBe("Open")
+      expect(mapStatus(socrata(r))).toBe(Status.Open)
+    }
+  })
+
+  // At least 3 named real Open rows, covering different currentstatus texts.
+  test("named real Open rows -> Status.Open (0)", () => {
+    for (const id of ["17781316", "17015642", "18908640"]) {
+      const r = openRows.find((x) => x.violationId === id)
+      if (!r) throw new Error(`fixture missing open violationId ${id}`)
+      expect(r.statusName).toBe("Open")
+      expect(mapStatus(socrata(r))).toBe(Status.Open)
+    }
+  })
+
+  // Synthetic Open row still covered (mapping is independent of currentstatus when Open).
+  test("synthetic Open row -> Status.Open (0)", () => {
     expect(mapStatus({ violationstatus: "Open", currentstatus: "NOV SENT OUT" })).toBe(Status.Open)
   })
 
