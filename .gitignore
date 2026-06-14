@@ -38,3 +38,6 @@ pnpm-debug.log*
 .idea/
 .vscode/
 *.swp
+
+# --- Next.js --- 
+app/.next
