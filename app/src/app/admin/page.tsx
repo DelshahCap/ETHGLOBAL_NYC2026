@@ -4,6 +4,7 @@ import { StatusBar } from './components/StatusBar'
 import { RolePanel, type Roles } from './components/RolePanel'
 import { LifecycleRunner } from './components/LifecycleRunner'
 import { ViolationEditor } from './components/ViolationEditor'
+import { FunctionTester } from './components/FunctionTester'
 
 export default function AdminPage() {
   const [roles, setRoles] = useState<Roles | null>(null)
@@ -15,6 +16,7 @@ export default function AdminPage() {
       <RolePanel roles={roles} />
       <LifecycleRunner roles={roles} />
       <ViolationEditor />
+      <FunctionTester />
     </main>
   )
 }
