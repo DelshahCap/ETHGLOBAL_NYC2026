@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { StatusBar } from './components/StatusBar'
 import { RolePanel, type Roles } from './components/RolePanel'
+import { LifecycleRunner } from './components/LifecycleRunner'
 
 export default function AdminPage() {
   const [roles, setRoles] = useState<Roles | null>(null)
@@ -11,6 +12,7 @@ export default function AdminPage() {
       <h1 className="text-xl font-bold">Admin / Test Panel</h1>
       <StatusBar />
       <RolePanel roles={roles} />
+      <LifecycleRunner roles={roles} />
     </main>
   )
 }
