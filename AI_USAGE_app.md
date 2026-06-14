@@ -50,3 +50,22 @@ live in [`docs/app/`](docs/app/).
   frontend slice in alongside Don's Chainlink CRE oracle track.
 - **Files touched:** everything under `app/`, `docs/app/admin-test-panel-guide.md`,
   `AI_USAGE_app.md`.
+
+### 2026-06-14 — Homepage login/sign-up with Privy email + role capture
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Added a real login/sign-up entry on the homepage. Reviewed the Privy v3
+  React SDK (via Context7) against our stack and corrected the described flow to how
+  Privy actually works: passwordless email + one-time passcode (no password), a single
+  unified login/sign-up call (Privy decides new-vs-returning — no manual "email not
+  found" branch), and automatic embedded-wallet provisioning via the existing
+  `embeddedWallets.createOnLogin = 'users-without-wallets'` provider config (no manual
+  create-wallet call). Used the prebuilt Privy email modal for auth (`useLogin` with an
+  `onComplete`/`isNewUser` callback) and added the one thing the modal can't ask — a
+  one-time role step (tenant/landlord/contractor) for new sign-ups. Persisted the
+  self-declared role per Privy user id in the existing KV store via a new `/api/profile`
+  route (in-memory fallback locally). Note: this `UserRole` is distinct from the four
+  fixed demo signer roles in `lib/server/keys.ts`; the POST is unauthenticated for the
+  demo (flagged in-code to verify the Privy access token in production). Typecheck green.
+- **Files touched:** `app/src/lib/profile.ts`, `app/src/lib/server/profiles.ts`,
+  `app/src/app/api/profile/route.ts`, `app/src/app/components/TenantAuth.tsx`,
+  `app/src/app/page.tsx`, `AI_USAGE_app.md`.
