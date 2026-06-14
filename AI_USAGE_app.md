@@ -105,3 +105,17 @@ live in [`docs/app/`](docs/app/).
   `app/src/app/api/profile/route.ts`, `app/src/app/components/TenantAuth.tsx`,
   `app/src/app/admin/components/UsersPanel.tsx`, `app/src/app/admin/page.tsx`,
   `AI_USAGE_app.md`.
+
+### 2026-06-14 — Provision KV; switch store to @upstash/redis
+- **Directed by:** Nilesh (frontend owner).
+- **What:** Nilesh provisioned a Vercel-connected Upstash store (`upstash-kv-carmine-mirror`,
+  standard `KV_REST_API_*` env). Made `kv.ts` accept either `KV_REST_API_*` or
+  `UPSTASH_REDIS_REST_*` naming and added a `/api/kv-status` diagnostic (reports
+  `{ backend, roundtrip }`). On review, an `npm install` had added two unused runtime
+  deps (`@upstash/redis`, plus the `vercel` CLI as a prod dependency); per Nilesh's
+  call, kept `@upstash/redis` and rewired `kv.ts` to use its `Redis` client directly,
+  then removed the unused `vercel` and `@vercel/kv` deps (cleaning the transitive
+  lockfile bloat). Secrets stay in gitignored `.env.local` / Vercel env — never committed.
+  Typecheck, 9 unit tests, and production build all green.
+- **Files touched:** `app/src/lib/server/kv.ts`, `app/src/app/api/kv-status/route.ts`,
+  `app/package.json`, `app/package-lock.json`, `AI_USAGE_app.md`.

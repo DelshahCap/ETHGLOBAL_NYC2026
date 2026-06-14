@@ -37,10 +37,11 @@ export async function getKv(): Promise<KvLike> {
   if (client) return client
   const creds = kvCreds()
   if (creds) {
-    // Pass creds explicitly rather than relying on the default `kv` export,
-    // which only reads the KV_REST_API_* names.
-    const { createClient } = await import('@vercel/kv')
-    client = createClient(creds) as unknown as KvLike
+    // Construct the Upstash REST client explicitly. Redis.fromEnv() only reads
+    // UPSTASH_REDIS_REST_* names, but Vercel's integration provides KV_REST_API_*;
+    // kvCreds() resolves either. get/set auto-(de)serialize JSON, matching KvLike.
+    const { Redis } = await import('@upstash/redis')
+    client = new Redis(creds) as unknown as KvLike
   } else {
     client = makeMemoryKv()
   }
