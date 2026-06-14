@@ -5,6 +5,7 @@ import { RolePanel, type Roles } from './components/RolePanel'
 import { LifecycleRunner } from './components/LifecycleRunner'
 import { ViolationEditor } from './components/ViolationEditor'
 import { FunctionTester } from './components/FunctionTester'
+import { EventLog } from './components/EventLog'
 
 export default function AdminPage() {
   const [roles, setRoles] = useState<Roles | null>(null)
@@ -17,6 +18,7 @@ export default function AdminPage() {
       <LifecycleRunner roles={roles} />
       <ViolationEditor />
       <FunctionTester />
+      <EventLog />
     </main>
   )
 }
