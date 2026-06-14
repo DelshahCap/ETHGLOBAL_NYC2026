@@ -13,7 +13,7 @@ import {
 import { encodeAbiParameters, parseAbiParameters } from "viem"
 
 // EscrowVault.Status enum (uint8 at the ABI boundary).
-const Status = { Open: 0, Closed: 1, Dismissed: 2 } as const
+export const Status = { Open: 0, Closed: 1, Dismissed: 2 } as const
 
 // Logical id of the Socrata app token, injected as a CRE secret (never committed).
 const SOCRATA_TOKEN_SECRET = "SOCRATA_APP_TOKEN"
@@ -32,12 +32,12 @@ type Config = {
   escrows: Escrow[] // escrows to track: { id, violationId }
 }
 
-type SocrataRow = { violationstatus?: string; currentstatus?: string }
+export type SocrataRow = { violationstatus?: string; currentstatus?: string }
 
 /// Map HPD fields -> EscrowVault.Status (uint8).
 /// violationstatus "Open" -> Open; "Close" + currentstatus contains "DISMISS" -> Dismissed;
 /// any other "Close" -> Closed. Missing data -> Open (stay locked; never settle on no data).
-const mapStatus = (row?: SocrataRow): number => {
+export const mapStatus = (row?: SocrataRow): number => {
   if (!row || !row.violationstatus) return Status.Open
   const vs = row.violationstatus.trim().toUpperCase()
   if (vs === "OPEN") return Status.Open

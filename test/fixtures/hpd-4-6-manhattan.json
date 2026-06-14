@@ -1,0 +1,240 @@
+{
+  "source": "NYC Open Data HPD Housing Maintenance Code Violations (wvxf-dwi5)",
+  "address": "4-6 Manhattan Ave",
+  "note": "29 violationIds that were Open in Jan 2026 snapshot and no longer open in May 2026 snapshot; statuses read live from the dataset.",
+  "fetchedAtUtcDate": "2026-06-14",
+  "rows": [
+    {
+      "violationId": "18427252",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION DISMISSED",
+      "status": 2,
+      "statusName": "Dismissed",
+      "found": true
+    },
+    {
+      "violationId": "18427253",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION DISMISSED",
+      "status": 2,
+      "statusName": "Dismissed",
+      "found": true
+    },
+    {
+      "violationId": "18427251",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "18100032",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17953722",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17781310",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17781313",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17751396",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17574254",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17574255",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17574256",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17070856",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17070835",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "17065236",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16941621",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16538510",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16538507",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16498722",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16498721",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16457484",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16457483",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16457480",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "16416800",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "15713566",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "14523671",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "13992452",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "13992455",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "13992454",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    },
+    {
+      "violationId": "13992453",
+      "violationstatus": "Close",
+      "currentstatus": "VIOLATION CLOSED",
+      "status": 1,
+      "statusName": "Closed",
+      "found": true
+    }
+  ]
+}

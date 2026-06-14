@@ -149,3 +149,14 @@ artifacts that directed the AI live in [specs/](specs/).
   wiring on-chain and recorded the receiver address, tx hashes, and oracle read in
   `deployments/arc-testnet.md`. Receiver: `0x9244…Ae00f`.
 - **Files touched:** `script/DeployReceiver.s.sol`, `deployments/arc-testnet.md`.
+
+### 2026-06-14 — mapStatus tests vs real HPD data
+- **Directed by:** Don
+- **What:** Once NYC Open Data came back up, fetched the live `wvxf-dwi5` status for the
+  29 violationIds at 4-6 Manhattan Ave that went Open→terminal (27 Closed, 2 Dismissed,
+  0 still Open, 0 not found, 0 portal-vs-dataset lag). Saved them to
+  `test/fixtures/hpd-4-6-manhattan.json`, exported `mapStatus` from `main.ts`, and added
+  `mapStatus.test.ts` asserting the mapping for all 29 real rows + synthetic Open/missing
+  cases. `bun test` 5/5 green. No status guessed — read from the live dataset.
+- **Files touched:** `cre-workflow/hpd-oracle/main.ts`,
+  `cre-workflow/hpd-oracle/mapStatus.test.ts`, `test/fixtures/hpd-4-6-manhattan.json`.
